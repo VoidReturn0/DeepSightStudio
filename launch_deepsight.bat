@@ -1,24 +1,20 @@
 @echo off
-setlocal
+REM Ensure we are in the root directory of DeepSightStudio-main
+cd /d %~dp0
 
-:: Capture the directory of the batch script
-set "SCRIPT_DIR=%~dp0"
-
-:: Use the Python from the virtual environment
-set "PYTHON_EXE=%SCRIPT_DIR%venv\Scripts\python.exe"
-
-:: Verify the Python executable exists
-if not exist "%PYTHON_EXE%" (
-    echo Error: Virtual environment not found. Please reinstall.
+REM Activate the virtual environment from the venv folder
+if exist venv\Scripts\activate.bat (
+    call venv\Scripts\activate.bat
+) else (
+    echo Virtual environment not found. Please run the installer.
     pause
-    exit /b 1
+    exit /b
 )
 
-:: Change to the script directory
-cd /d "%SCRIPT_DIR%"
+REM Debug: Print the active Python executable
+python -c "import sys; print('Using Python:', sys.executable)"
 
-:: Activate and run
-call "%SCRIPT_DIR%venv\Scripts\activate"
-"%PYTHON_EXE%" gui.py
+REM Run the gui.py script
+python gui.py
 
 pause
