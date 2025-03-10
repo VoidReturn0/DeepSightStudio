@@ -46,6 +46,20 @@ if not exist "%MODEL_DIR%" (
 echo %BOLD%Continuing with installation...%RESET%
 echo.
 
+:: Function to display a proper progress bar
+:progress_bar
+set /a fill=%~1*%~2/100
+set "bar="
+for /L %%i in (1,1,%~2) do (
+    if %%i leq !fill! (
+        set "bar=!bar!#"
+    ) else (
+        set "bar=!bar!."
+    )
+)
+echo [!bar!] %~1%%
+goto :eof
+
 :: Check for Python 3.8+
 echo %BOLD%Checking for Python installation...%RESET%
 python --version >nul 2>&1
@@ -54,13 +68,9 @@ if %errorLevel% neq 0 (
     
     :: Download Python installer using direct method
     echo %BOLD%Downloading Python 3.8.10...%RESET%
-    echo [
-    for /L %%i in (1,1,20) do (
-        <nul set /p "=▓"
-        timeout /t 0 >nul
-    )
-    echo ] 100%%
+    call :progress_bar 0 50
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe', '%TEMP%\python-installer.exe')"
+    call :progress_bar 100 50
     
     if not exist "%TEMP%\python-installer.exe" (
         echo %RED%Failed to download Python installer.%RESET%
@@ -69,14 +79,9 @@ if %errorLevel% neq 0 (
     
     echo %BOLD%Installing Python 3.8.10...%RESET%
     echo This may take a few minutes...
-    echo [
-    for /L %%i in (1,1,40) do (
-        <nul set /p "=▓"
-        timeout /t 0 >nul
-    )
-    :: Run installer with required options, fixing syntax error
+    call :progress_bar 0 50
     "%TEMP%\python-installer.exe" /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
-    echo ] 100%%
+    call :progress_bar 100 50
     
     if %errorLevel% neq 0 (
         echo %RED%Error during Python installation.%RESET%
@@ -122,17 +127,12 @@ if %errorLevel% neq 0 (
     )
 )
 
-:: Rest of script continues as before...
 :: Install required pip and virtualenv
 echo.
 echo %BOLD%Installing/upgrading pip and virtualenv...%RESET%
-echo [
+call :progress_bar 0 30
 python -m pip install --upgrade pip virtualenv >nul 2>&1
-for /L %%i in (1,1,30) do (
-    <nul set /p "=▓"
-    timeout /t 0 >nul
-)
-echo ] 100%%
+call :progress_bar 100 30
 
 :: Create and activate the virtual environment
 echo.
@@ -144,23 +144,15 @@ if exist venv (
     if /i "!RECREATE!"=="y" (
         echo %BOLD%Removing existing virtual environment...%RESET%
         rmdir /s /q venv
-        echo [
+        call :progress_bar 0 30
         python -m venv venv >nul 2>&1
-        for /L %%i in (1,1,20) do (
-            <nul set /p "=▓"
-            timeout /t 0 >nul
-        )
-        echo ] 100%%
+        call :progress_bar 100 30
         echo %GREEN%Virtual environment recreated.%RESET%
     )
 ) else (
-    echo [
+    call :progress_bar 0 30
     python -m venv venv >nul 2>&1
-    for /L %%i in (1,1,20) do (
-        <nul set /p "=▓"
-        timeout /t 0 >nul
-    )
-    echo ] 100%%
+    call :progress_bar 100 30
     echo %GREEN%Virtual environment created.%RESET%
 )
 
@@ -191,41 +183,24 @@ echo %BOLD%Installing dependencies...%RESET%
 echo %YELLOW%This will take some time. Please be patient.%RESET%
 
 echo %BOLD%Installing core packages...%RESET%
-echo [
-set counter=0
-for /L %%i in (1,1,25) do (
-    <nul set /p "=▓"
-    timeout /t 0 >nul
-)
+call :progress_bar 0 25
 pip install numpy packaging tqdm >nul 2>&1
-echo ] 25%%
+call :progress_bar 25 25
 
 echo %BOLD%Installing PyTorch...%RESET%
-echo [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-for /L %%i in (1,1,25) do (
-    <nul set /p "=▓"
-    timeout /t 0 >nul
-)
+call :progress_bar 25 50
 pip install torch torchvision >nul 2>&1
-echo ] 50%%
+call :progress_bar 50 50
 
 echo %BOLD%Installing OpenCV and other dependencies...%RESET%
-echo [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-for /L %%i in (1,1,25) do (
-    <nul set /p "=▓"
-    timeout /t 0 >nul
-)
+call :progress_bar 50 75
 pip install opencv-python Pillow pyserial pyyaml >nul 2>&1
-echo ] 75%%
+call :progress_bar 75 75
 
 echo %BOLD%Installing Ultralytics (YOLOv8)...%RESET%
-echo [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-for /L %%i in (1,1,25) do (
-    <nul set /p "=▓"
-    timeout /t 0 >nul
-)
+call :progress_bar 75 100
 pip install ultralytics >nul 2>&1
-echo ] 100%%
+call :progress_bar 100 100
 
 echo %GREEN%Dependencies installed successfully.%RESET%
 
@@ -238,20 +213,12 @@ if not exist yolov5 (
     if %errorLevel% neq 0 (
         echo %YELLOW%Git is not installed. Using direct download instead...%RESET%
         echo %BOLD%Downloading YOLOv5...%RESET%
-        echo [
-        for /L %%i in (1,1,50) do (
-            <nul set /p "=▓"
-            timeout /t 0 >nul
-        )
+        call :progress_bar 0 50
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/archive/refs/heads/master.zip', '%BASE_DIR%\yolov5.zip')"
-        echo ] 100%%
+        call :progress_bar 50 50
         
         echo %BOLD%Extracting YOLOv5...%RESET%
-        echo [
-        for /L %%i in (1,1,50) do (
-            <nul set /p "=▓"
-            timeout /t 0 >nul
-        )
+        call :progress_bar 0 50
         powershell -Command "Expand-Archive -Path '%BASE_DIR%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
         if exist "%BASE_DIR%\yolov5-master" (
             ren "%BASE_DIR%\yolov5-master" "yolov5"
@@ -259,7 +226,7 @@ if not exist yolov5 (
         if exist "%BASE_DIR%\yolov5.zip" (
             del "%BASE_DIR%\yolov5.zip"
         )
-        echo ] 100%%
+        call :progress_bar 100 50
         
         if not exist "%BASE_DIR%\yolov5" (
             echo %RED%Warning: Failed to download YOLOv5 repository.%RESET%
@@ -269,13 +236,9 @@ if not exist yolov5 (
         )
     ) else (
         echo %BOLD%Cloning YOLOv5 repository...%RESET%
-        echo [
-        for /L %%i in (1,1,50) do (
-            <nul set /p "=▓"
-            timeout /t 0 >nul
-        )
+        call :progress_bar 0 50
         git clone https://github.com/ultralytics/yolov5.git >nul 2>&1
-        echo ] 100%%
+        call :progress_bar 100 50
         
         if %errorLevel% neq 0 (
             echo %RED%Warning: Failed to clone YOLOv5 repository.%RESET%
@@ -309,13 +272,9 @@ mkdir "%MODEL_DIR%\yolov8" 2>nul
 :: Download YOLOv5s weights if not exists
 if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
     echo %BOLD%Downloading YOLOv5s weights...%RESET%
-    echo [
-    for /L %%i in (1,1,50) do (
-        <nul set /p "=▓"
-        timeout /t 0 >nul
-    )
+    call :progress_bar 0 50
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s.pt', '%MODEL_DIR%\yolov5\yolov5s.pt')"
-    echo ] 100%%
+    call :progress_bar 100 50
     
     if %errorLevel% neq 0 (
         echo %RED%Warning: Failed to download YOLOv5s weights.%RESET%
@@ -329,13 +288,9 @@ if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
 :: Download YOLOv8n weights if not exists
 if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
     echo %BOLD%Downloading YOLOv8n weights...%RESET%
-    echo [
-    for /L %%i in (1,1,50) do (
-        <nul set /p "=▓"
-        timeout /t 0 >nul
-    )
+    call :progress_bar 0 50
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt', '%MODEL_DIR%\yolov8\yolov8n.pt')"
-    echo ] 100%%
+    call :progress_bar 100 50
     
     if %errorLevel% neq 0 (
         echo %RED%Warning: Failed to download YOLOv8n weights.%RESET%
@@ -350,13 +305,9 @@ if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
 if not exist "Orbitron-VariableFont_wght.ttf" (
     echo.
     echo %BOLD%Downloading Orbitron font...%RESET%
-    echo [
-    for /L %%i in (1,1,50) do (
-        <nul set /p "=▓"
-        timeout /t 0 >nul
-    )
+    call :progress_bar 0 50
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf', '%BASE_DIR%\Orbitron-VariableFont_wght.ttf')"
-    echo ] 100%%
+    call :progress_bar 100 50
     
     if %errorLevel% neq 0 (
         echo %RED%Warning: Failed to download Orbitron font.%RESET%
