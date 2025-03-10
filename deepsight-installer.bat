@@ -47,25 +47,33 @@ python --version >nul 2>&1
 if %errorLevel% neq 0 (
     echo Python not found. Installing Python 3.8...
     
-    :: Create a temporary directory
-    set TEMP_DIR=%TEMP%\python_installer
-    mkdir "%TEMP_DIR%" 2>nul
-    
-    :: Download Python installer
+    :: Download Python installer using direct method
     echo Downloading Python 3.8.10...
-    powershell -Command "& {Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe' -OutFile '%TEMP_DIR%\python_installer.exe'}"
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe', '%TEMP%\python-installer.exe')"
     
-    :: Install Python
+    if not exist "%TEMP%\python-installer.exe" (
+        echo Failed to download Python installer.
+        goto python_install_failed
+    )
+    
     echo Installing Python 3.8.10...
-    "%TEMP_DIR%\python_installer.exe" /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+    :: Run installer with required options, fixing syntax error
+    "%TEMP%\python-installer.exe" /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
     
-    :: Clean up
-    rmdir /s /q "%TEMP_DIR%"
+    if %errorLevel% neq 0 (
+        echo Error during Python installation.
+        goto python_install_failed
+    )
     
-    :: Verify installation
+    echo Python installation completed. Refreshing environment...
+    :: Refresh environment variables
+    powershell -Command "[System.Environment]::SetEnvironmentVariable('Path',[System.Environment]::GetEnvironmentVariable('Path','Machine') + [System.Environment]::GetEnvironmentVariable('Path','User'),'Process')"
+    
+    :: Verify Python installation
     echo Verifying Python installation...
     python --version >nul 2>&1
     if %errorLevel% neq 0 (
+        :python_install_failed
         echo Python installation failed. Please install Python 3.8 or newer manually.
         echo Visit: https://www.python.org/downloads/
         pause
@@ -85,17 +93,18 @@ if %errorLevel% neq 0 (
     
     if !MAJOR! LSS 3 (
         echo Python 3.8+ required, but found !PYTHON_VERSION!
-        goto install_python
+        goto python_install_failed
     ) else (
         if !MAJOR! EQU 3 (
             if !MINOR! LSS 8 (
                 echo Python 3.8+ required, but found !PYTHON_VERSION!
-                goto install_python
+                goto python_install_failed
             )
         )
     )
 )
 
+:: The rest of the script remains the same...
 :: Install required pip and virtualenv
 echo.
 echo Installing/upgrading pip and virtualenv...
@@ -158,51 +167,38 @@ if not exist yolov5 (
     echo Checking if git is installed...
     git --version >nul 2>&1
     if %errorLevel% neq 0 (
-        echo Git is not installed. Downloading portable git...
-        powershell -Command "& {Invoke-WebRequest -Uri 'https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/PortableGit-2.33.0.2-64-bit.7z.exe' -OutFile '%TEMP%\git.exe'}"
-        echo Extracting portable git...
-        "%TEMP%\git.exe" -o"%BASE_DIR%\git" -y
-        set "PATH=%BASE_DIR%\git\bin;%PATH%"
-    }
-    
-    git clone https://github.com/ultralytics/yolov5.git
-    if %errorLevel% neq 0 (
-        echo Warning: Failed to clone YOLOv5 repository.
-        echo Please download it manually from https://github.com/ultralytics/yolov5
+        echo Git is not installed. Using direct download instead...
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/archive/refs/heads/master.zip', '%TEMP%\yolov5.zip')"
+        powershell -Command "Expand-Archive -Path '%TEMP%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
+        ren yolov5-master yolov5
+        if %errorLevel% neq 0 (
+            echo Warning: Failed to download YOLOv5 repository.
+            echo Please download it manually from https://github.com/ultralytics/yolov5
+        ) else {
+            echo YOLOv5 downloaded and extracted successfully.
+        }
     ) else (
-        echo YOLOv5 repository cloned successfully.
+        git clone https://github.com/ultralytics/yolov5.git
+        if %errorLevel% neq 0 (
+            echo Warning: Failed to clone YOLOv5 repository.
+            echo Please download it manually from https://github.com/ultralytics/yolov5
+        ) else (
+            echo YOLOv5 repository cloned successfully.
+        )
     )
 ) else (
     echo YOLOv5 repository already exists.
 )
 
-:: Clone YOLOv8 repository (Ultralytics)
+:: Clone/install YOLOv8
 if not exist yolov8 (
     echo.
-    echo Cloning YOLOv8 repository...
-    
-    git --version >nul 2>&1
-    if %errorLevel% eq 0 (
-        git clone https://github.com/ultralytics/ultralytics.git yolov8
-        if %errorLevel% neq 0 (
-            echo Warning: Failed to clone YOLOv8 repository.
-            echo Please download it manually from https://github.com/ultralytics/ultralytics
-        ) else (
-            echo YOLOv8 repository cloned successfully.
-        )
-    ) else (
-        echo Git not available. Using pip to install YOLOv8...
-        pip install ultralytics
-        echo YOLOv8 (ultralytics) installed via pip.
-        
-        :: Create yolov8 directory to store examples
-        mkdir yolov8
-        echo Created yolov8 directory for examples.
-        
-        :: Download a sample YOLOv8 script
-        echo Downloading YOLOv8 example script...
-        powershell -Command "& {Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ultralytics/ultralytics/main/examples/train.py' -OutFile 'yolov8/train_example.py'}"
-    )
+    echo Setting up YOLOv8...
+    mkdir yolov8
+    echo Created yolov8 directory for examples.
+    echo Installing ultralytics package...
+    pip install ultralytics
+    echo YOLOv8 (ultralytics) installed via pip.
 ) else (
     echo YOLOv8 directory already exists.
 )
@@ -218,7 +214,7 @@ mkdir "%MODEL_DIR%\yolov8" 2>nul
 :: Download YOLOv5s weights if not exists
 if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
     echo Downloading YOLOv5s weights...
-    powershell -Command "& {Invoke-WebRequest -Uri 'https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s.pt' -OutFile '%MODEL_DIR%\yolov5\yolov5s.pt'}"
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s.pt', '%MODEL_DIR%\yolov5\yolov5s.pt')"
     if %errorLevel% neq 0 (
         echo Warning: Failed to download YOLOv5s weights.
     ) else (
@@ -231,7 +227,7 @@ if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
 :: Download YOLOv8n weights if not exists
 if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
     echo Downloading YOLOv8n weights...
-    powershell -Command "& {Invoke-WebRequest -Uri 'https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt' -OutFile '%MODEL_DIR%\yolov8\yolov8n.pt'}"
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt', '%MODEL_DIR%\yolov8\yolov8n.pt')"
     if %errorLevel% neq 0 (
         echo Warning: Failed to download YOLOv8n weights.
     ) else (
@@ -245,7 +241,7 @@ if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
 if not exist "Orbitron-VariableFont_wght.ttf" (
     echo.
     echo Downloading Orbitron font...
-    powershell -Command "& {Invoke-WebRequest -Uri 'https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf' -OutFile 'Orbitron-VariableFont_wght.ttf'}"
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf', 'Orbitron-VariableFont_wght.ttf')"
     
     if %errorLevel% neq 0 (
         echo Warning: Failed to download Orbitron font.
