@@ -1,0 +1,30 @@
+Here's a comprehensive Windows batch installation script for DeepSight Studio that will:
+
+Check for administrator privileges
+Create a dedicated directory at %USERPROFILE%\DeepSightStudio
+Check for Python 3.8+ and install it if needed
+Create and activate a virtual environment named "DeepSightStudio"
+Install all required dependencies
+Clone the YOLOv5 repository
+Download the Orbitron font
+Create a default configuration file
+Create a launcher script and desktop shortcut
+
+How to Use the Installer
+
+Save the script as DeepSightStudio_Installer.bat
+Right-click the file and select "Run as administrator"
+Follow the prompts during installation
+Once complete, you can launch DeepSight Studio using the desktop shortcut or the launcher batch file
+
+Key Features of the Installer
+
+Automated Python Installation: Detects if Python 3.8+ is installed, and downloads and installs it if needed
+Virtual Environment: Creates an isolated Python environment to avoid conflicts with other Python applications
+Dependency Management: Installs all required packages from requirements.txt
+YOLOv5 Integration: Clones the YOLOv5 repository for training and inference
+Font Support: Downloads and installs the Orbitron font used in the UI
+Configuration: Creates a default maintenance.json configuration file
+Easy Launch: Creates a desktop shortcut and launcher script
+
+After running the installer, your environment will be fully set up and ready to use DeepSight Studio for computer vision tasks with YOLOv5 and YOLOv8.
