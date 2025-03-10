@@ -26,19 +26,10 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
-:: Create the base directory
-set BASE_DIR=%USERPROFILE%\DeepSightStudio
-if not exist "%BASE_DIR%" (
-    echo %BOLD%Creating DeepSight Studio directory...%RESET%
-    mkdir "%BASE_DIR%"
-    echo %GREEN%Created directory: %BASE_DIR%%RESET%
-) else (
-    echo %YELLOW%DeepSight Studio directory already exists: %BASE_DIR%%RESET%
-)
-
-:: Navigate to the directory
-cd /d "%BASE_DIR%"
-echo %BOLD%Current directory: %cd%%RESET%
+:: Set BASE_DIR to current directory instead of user profile
+set BASE_DIR=%~dp0
+set BASE_DIR=%BASE_DIR:~0,-1%
+echo %BOLD%Using current directory for installation: %BASE_DIR%%RESET%
 echo.
 
 :: Create DeepSightModel directory for weights
@@ -269,7 +260,7 @@ if not exist yolov5 (
             <nul set /p "=▓"
             timeout /t 0 >nul
         )
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/archive/refs/heads/master.zip', '%TEMP%\yolov5.zip')"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/archive/refs/heads/master.zip', '%BASE_DIR%\yolov5.zip')"
         echo ] 100%%
         
         echo %BOLD%Extracting YOLOv5...%RESET%
@@ -278,11 +269,16 @@ if not exist yolov5 (
             <nul set /p "=▓"
             timeout /t 0 >nul
         )
-        powershell -Command "Expand-Archive -Path '%TEMP%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
-        ren yolov5-master yolov5
+        powershell -Command "Expand-Archive -Path '%BASE_DIR%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
+        if exist "%BASE_DIR%\yolov5-master" (
+            ren "%BASE_DIR%\yolov5-master" "yolov5"
+        )
+        if exist "%BASE_DIR%\yolov5.zip" (
+            del "%BASE_DIR%\yolov5.zip"
+        )
         echo ] 100%%
         
-        if %errorLevel% neq 0 (
+        if not exist "%BASE_DIR%\yolov5" (
             echo %RED%Warning: Failed to download YOLOv5 repository.%RESET%
             echo %YELLOW%Please download it manually from https://github.com/ultralytics/yolov5%RESET%
         ) else (
@@ -376,7 +372,7 @@ if not exist "Orbitron-VariableFont_wght.ttf" (
         <nul set /p "=▓"
         timeout /t 0 >nul
     )
-    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf', 'Orbitron-VariableFont_wght.ttf')"
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf', '%BASE_DIR%\Orbitron-VariableFont_wght.ttf')"
     echo ] 100%%
     
     if %errorLevel% neq 0 (
