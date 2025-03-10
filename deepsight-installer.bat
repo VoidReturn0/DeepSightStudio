@@ -68,13 +68,6 @@ if %errorLevel% neq 0 (
     )
 )
 
-:: Install required pip and virtualenv
-echo.
-echo Installing/upgrading pip and virtualenv...
-python -m pip install --upgrade pip
-python -m pip install --upgrade virtualenv
-echo Done.
-
 :: Create and activate the virtual environment
 echo.
 echo Creating virtual environment "DeepSightStudio"...
@@ -86,8 +79,12 @@ echo.
 echo Activating virtual environment...
 call venv\Scripts\activate
 
-:: Upgrade pip to latest version
+:: Install required pip and virtualenv
+echo.
+echo Installing/upgrading pip and virtualenv...
 python -m pip install --upgrade pip
+python -m pip install --upgrade virtualenv
+echo Done.
 
 :: Create requirements.txt file
 echo.
@@ -99,7 +96,6 @@ echo torch>=1.7.0 >> requirements.txt
 echo torchvision>=0.8.1 >> requirements.txt
 echo ultralytics>=8.0.0 >> requirements.txt
 echo Pillow>=9.5.0 >> requirements.txt
-echo Pillow >> requirements.txt
 echo pyserial>=3.5 >> requirements.txt
 echo pyyaml>=5.1 >> requirements.txt
 echo packaging >> requirements.txt
@@ -126,8 +122,6 @@ if %errorLevel% neq 0 (
 
 :: Verify Pillow installation
 python -c "import PIL; print('Pillow version: ' + PIL.__version__)"
-
-
 
 :: Clone YOLOv5 repository
 if not exist yolov5 (
@@ -320,5 +314,10 @@ echo To start the application:
 echo 1. Double-click the "DeepSight Studio" shortcut on your desktop, or
 echo 2. Run launch_deepsight.bat from the installation directory
 echo.
+
+:: Launch the application automatically
+echo Launching DeepSight Studio...
+start launch_deepsight.bat
+
 echo Press any key to exit...
 pause > nul
