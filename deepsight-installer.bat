@@ -107,7 +107,7 @@ echo numpy>=1.20.0 >> requirements.txt
 echo torch>=1.7.0 >> requirements.txt
 echo torchvision>=0.8.1 >> requirements.txt
 echo ultralytics>=8.0.0 >> requirements.txt
-echo Pillow>=8.0.0 >> requirements.txt
+echo Pillow>=9.5.0 >> requirements.txt
 echo pyserial>=3.5 >> requirements.txt
 echo pyyaml>=5.1 >> requirements.txt
 echo packaging >> requirements.txt
