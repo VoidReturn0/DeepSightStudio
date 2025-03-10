@@ -16,21 +16,16 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
-:: Set BASE_DIR to current directory
+:: Set BASE_DIR to current directory (removing any trailing backslash)
 set BASE_DIR=%~dp0
 set BASE_DIR=%BASE_DIR:~0,-1%
 echo Using current directory for installation: %BASE_DIR%
 echo.
 
-:: Create DeepSightModel directory for weights
-set MODEL_DIR=%BASE_DIR%\DeepSightModel
-if not exist "%MODEL_DIR%" (
-    echo Creating model weights directory...
-    mkdir "%MODEL_DIR%"
-    echo Created directory: %MODEL_DIR%
-) else (
-    echo Model weights directory already exists: %MODEL_DIR%
-)
+:: Use BASE_DIR as the model weights directory (creation will be handled later by the GUI)
+set MODEL_DIR=%BASE_DIR%
+echo Using installation directory for model weights: %MODEL_DIR%
+echo.
 
 echo Continuing with installation...
 echo.
@@ -197,7 +192,7 @@ if not exist yolov8 (
 echo.
 echo Downloading pre-trained model weights...
 
-:: Create subdirectories in the model folder
+:: Create subdirectories for weights inside the base directory
 mkdir "%MODEL_DIR%\yolov5" 2>nul
 mkdir "%MODEL_DIR%\yolov8" 2>nul
 
@@ -300,11 +295,12 @@ mkdir training_data\cards 2>nul
 mkdir training_data\dice 2>nul
 echo Training data directories created.
 
-:: Create launcher batch file
+:: Create launcher batch file with proper working directory set
 echo.
 echo Creating launcher script...
 (
 echo @echo off
+echo cd /d %BASE_DIR%
 echo call "%BASE_DIR%\venv\Scripts\activate.bat"
 echo echo Starting DeepSight Studio...
 echo echo Model weights directory: %MODEL_DIR%
