@@ -108,6 +108,7 @@ echo torch>=1.7.0 >> requirements.txt
 echo torchvision>=0.8.1 >> requirements.txt
 echo ultralytics>=8.0.0 >> requirements.txt
 echo Pillow>=9.5.0 >> requirements.txt
+echo Pillow >> requirements.txt
 echo pyserial>=3.5 >> requirements.txt
 echo pyyaml>=5.1 >> requirements.txt
 echo packaging >> requirements.txt
@@ -121,6 +122,8 @@ echo This will take some time. Please be patient.
 
 :: Modification to handle package installation more robustly
 pip install -r requirements.txt -v
+pip install pillow
+python -m pip install pillow
 
 :: Check if pip completed successfully
 pip list > nul 2>&1
@@ -129,6 +132,10 @@ if %errorLevel% neq 0 (
 ) else (
     echo All dependencies installed successfully.
 )
+
+:: Verify Pillow installation
+python -c "import PIL; print('Pillow version: ' + PIL.__version__)"
+
 
 :: Clone YOLOv5 repository
 if not exist yolov5 (
