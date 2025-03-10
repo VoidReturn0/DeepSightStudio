@@ -71,7 +71,7 @@ if %errorLevel% neq 0 (
 :: Create and activate the virtual environment
 echo.
 echo Creating virtual environment "DeepSightStudio"...
-python -m venv venv
+python -m venv "%BASE_DIR%\venv"
 echo Virtual environment created.
 
 :: Activate the virtual environment
