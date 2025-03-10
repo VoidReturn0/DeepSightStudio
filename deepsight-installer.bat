@@ -78,25 +78,16 @@ echo Done.
 :: Create and activate the virtual environment
 echo.
 echo Creating virtual environment "DeepSightStudio"...
-if exist venv (
-    echo Virtual environment already exists.
-    echo.
-    set /p RECREATE="Do you want to recreate it? (y/n): "
-    if /i "!RECREATE!"=="y" (
-        echo Removing existing virtual environment...
-        rmdir /s /q venv
-        python -m venv venv
-        echo Virtual environment recreated.
-    )
-) else (
-    python -m venv venv
-    echo Virtual environment created.
-)
+python -m venv venv
+echo Virtual environment created.
 
 :: Activate the virtual environment
 echo.
 echo Activating virtual environment...
 call venv\Scripts\activate
+
+:: Upgrade pip to latest version
+python -m pip install --upgrade pip
 
 :: Create requirements.txt file
 echo.
@@ -135,6 +126,7 @@ if %errorLevel% neq 0 (
 
 :: Verify Pillow installation
 python -c "import PIL; print('Pillow version: ' + PIL.__version__)"
+
 
 
 :: Clone YOLOv5 repository
