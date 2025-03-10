@@ -112,6 +112,14 @@ pip install -r requirements.txt -v
 pip install pillow
 python -m pip install pillow
 
+:: EXPLICITLY INSTALL PYSERIAL
+echo Installing pyserial...
+pip install pyserial
+python -m pip install pyserial
+
+:: Verify pyserial installation
+python -c "import serial; print('Serial module installed successfully')"
+
 :: Check if pip completed successfully
 pip list > nul 2>&1
 if %errorLevel% neq 0 (
