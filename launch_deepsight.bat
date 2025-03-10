@@ -1,7 +1,19 @@
 @echo off
-call "%BASE_DIR%\venv\Scripts\activate"
-echo Starting DeepSight Studio...
-echo Model weights directory: %MODEL_DIR%
-cd "%BASE_DIR%"
+setlocal
+
+:: Capture the directory of the batch script
+set "SCRIPT_DIR=%~dp0"
+
+:: Change to the directory of the batch script
+cd /d "%SCRIPT_DIR%"
+
+:: Activate virtual environment
+call "%SCRIPT_DIR%venv\Scripts\activate"
+
+:: List installed packages
+pip list
+
+:: Launch GUI
 python gui.py
+
 pause
