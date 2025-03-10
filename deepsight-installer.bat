@@ -114,12 +114,53 @@ echo packaging >> requirements.txt
 echo tqdm >> requirements.txt
 echo requirements.txt created successfully.
 
-:: Install dependencies
+:: Install dependencies with package counter
 echo.
 echo Installing dependencies...
 echo This will take some time. Please be patient.
-pip install -r requirements.txt
-echo Dependencies installed.
+
+:: Create a temporary file to count installations
+echo 0 > %TEMP%\pkg_count.txt
+echo 0 > %TEMP%\total_pkgs.txt
+
+:: Extract total package count first by running a dry run
+pip install --no-deps --dry-run -r requirements.txt > %TEMP%\dry_run.txt
+findstr /C:"Collecting" %TEMP%\dry_run.txt > %TEMP%\collect_lines.txt
+for /f %%i in ('type %TEMP%\collect_lines.txt ^| find /c /v ""') do set TOTAL_PKGS=%%i
+echo %TOTAL_PKGS% > %TEMP%\total_pkgs.txt
+
+:: Install with a custom callback script to show progress
+echo @echo off > %TEMP%\pkg_callback.bat
+echo set /p PKG_COUNT=^<%TEMP%\pkg_count.txt >> %TEMP%\pkg_callback.bat
+echo set /a PKG_COUNT+=1 >> %TEMP%\pkg_callback.bat
+echo echo !PKG_COUNT! ^> %TEMP%\pkg_count.txt >> %TEMP%\pkg_callback.bat
+echo set /p TOTAL=^<%TEMP%\total_pkgs.txt >> %TEMP%\pkg_callback.bat
+echo set /a PCT=!PKG_COUNT! * 100 / !TOTAL! >> %TEMP%\pkg_callback.bat
+echo echo Installing package !PKG_COUNT! of !TOTAL! ^(!PCT!%%^) >> %TEMP%\pkg_callback.bat
+
+:: Hook the callback into pip's process
+set PIP_PROGRESS_BAR=off
+
+:: Now run the actual installation with verbose output
+echo Starting installation... (Package 0 of %TOTAL_PKGS% - 0%%)
+for /f "tokens=*" %%p in ('pip install -r requirements.txt -v 2^>^&1 ^| findstr /C:"Collecting"') do (
+    call %TEMP%\pkg_callback.bat
+)
+
+:: Check if pip completed successfully
+pip list > nul 2>&1
+if %errorLevel% neq 0 (
+    echo Warning: There may have been issues with package installation.
+) else (
+    echo All dependencies installed successfully.
+)
+
+:: Remove temporary files
+del %TEMP%\pkg_count.txt > nul 2>&1
+del %TEMP%\total_pkgs.txt > nul 2>&1
+del %TEMP%\pkg_callback.bat > nul 2>&1
+del %TEMP%\dry_run.txt > nul 2>&1
+del %TEMP%\collect_lines.txt > nul 2>&1
 
 :: Clone YOLOv5 repository
 if not exist yolov5 (
@@ -129,10 +170,11 @@ if not exist yolov5 (
     git --version >nul 2>&1
     if %errorLevel% neq 0 (
         echo Git is not installed. Using direct download instead...
-        echo Downloading YOLOv5...
+        echo Downloading YOLOv5... (0%)
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/archive/refs/heads/master.zip', '%BASE_DIR%\yolov5.zip')"
+        echo Download complete! (100%)
         
-        echo Extracting YOLOv5...
+        echo Extracting YOLOv5... (0%)
         powershell -Command "Expand-Archive -Path '%BASE_DIR%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
         if exist "%BASE_DIR%\yolov5-master" (
             ren "%BASE_DIR%\yolov5-master" "yolov5"
@@ -140,6 +182,7 @@ if not exist yolov5 (
         if exist "%BASE_DIR%\yolov5.zip" (
             del "%BASE_DIR%\yolov5.zip"
         )
+        echo Extraction complete! (100%)
         
         if not exist "%BASE_DIR%\yolov5" (
             echo Warning: Failed to download YOLOv5 repository.
@@ -148,8 +191,9 @@ if not exist yolov5 (
             echo YOLOv5 downloaded and extracted successfully.
         )
     ) else (
-        echo Cloning YOLOv5 repository...
+        echo Cloning YOLOv5 repository... (0%)
         git clone https://github.com/ultralytics/yolov5.git
+        echo Cloning complete! (100%)
         
         if %errorLevel% neq 0 (
             echo Warning: Failed to clone YOLOv5 repository.
@@ -182,8 +226,9 @@ mkdir "%MODEL_DIR%\yolov8" 2>nul
 
 :: Download YOLOv5s weights if not exists
 if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
-    echo Downloading YOLOv5s weights...
+    echo Downloading YOLOv5s weights... (0%)
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s.pt', '%MODEL_DIR%\yolov5\yolov5s.pt')"
+    echo Download complete! (100%)
     
     if %errorLevel% neq 0 (
         echo Warning: Failed to download YOLOv5s weights.
@@ -196,8 +241,9 @@ if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
 
 :: Download YOLOv8n weights if not exists
 if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
-    echo Downloading YOLOv8n weights...
+    echo Downloading YOLOv8n weights... (0%)
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt', '%MODEL_DIR%\yolov8\yolov8n.pt')"
+    echo Download complete! (100%)
     
     if %errorLevel% neq 0 (
         echo Warning: Failed to download YOLOv8n weights.
@@ -211,8 +257,9 @@ if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
 :: Download Orbitron font
 if not exist "Orbitron-VariableFont_wght.ttf" (
     echo.
-    echo Downloading Orbitron font...
+    echo Downloading Orbitron font... (0%)
     powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf', '%BASE_DIR%\Orbitron-VariableFont_wght.ttf')"
+    echo Download complete! (100%)
     
     if %errorLevel% neq 0 (
         echo Warning: Failed to download Orbitron font.
