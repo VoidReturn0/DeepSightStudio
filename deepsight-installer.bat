@@ -42,27 +42,9 @@ if not exist "%MODEL_DIR%" (
     echo %YELLOW%Model weights directory already exists: %MODEL_DIR%%RESET%
 )
 
-:: Function to display a fancy spinner
-:: Call it with a message: call :show_spinner "Your message"
-:show_spinner
-setlocal
-set "message=%~1"
-set "spinChars=/-\|"
-set "spinIndex=0"
-set "startTime=%time%"
-
-for /L %%i in (1,1,50) do (
-    set /a "spinIndex=spinIndex %% 4"
-    for /f %%j in ("!spinIndex!") do (
-        set "spinChar=!spinChars:~%%j,1!"
-    )
-    <nul set /p "=!message! !spinChar!"
-    timeout /t 0 >nul
-    <nul set /p "=!BS!"
-    set /a "spinIndex+=1"
-)
-endlocal
-goto :eof
+:: Force the script to continue past this point
+echo %BOLD%Continuing with installation...%RESET%
+echo.
 
 :: Check for Python 3.8+
 echo %BOLD%Checking for Python installation...%RESET%
@@ -140,6 +122,7 @@ if %errorLevel% neq 0 (
     )
 )
 
+:: Rest of script continues as before...
 :: Install required pip and virtualenv
 echo.
 echo %BOLD%Installing/upgrading pip and virtualenv...%RESET%
