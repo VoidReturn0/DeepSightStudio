@@ -72,14 +72,23 @@ if %errorLevel% neq 0 (
 echo.
 echo Creating virtual environment "DeepSightStudio"...
 python -m venv "%BASE_DIR%\venv"
+if %errorLevel% neq 0 (
+    echo Failed to create virtual environment.
+    pause
+    exit /b 1
+)
 echo Virtual environment created.
 
-:: Activate the virtual environment
 echo.
 echo Activating virtual environment...
-call venv\Scripts\activate
+call venv\Scripts\activate.bat
+if %errorLevel% neq 0 (
+    echo Failed to activate virtual environment.
+    pause
+    exit /b 1
+)
 
-:: Install required pip and virtualenv
+:: Install/upgrading pip and virtualenv
 echo.
 echo Installing/upgrading pip and virtualenv...
 python -m pip install --upgrade pip
@@ -89,47 +98,46 @@ echo Done.
 :: Create requirements.txt file
 echo.
 echo Creating requirements.txt...
-echo # DeepSight Studio Requirements > requirements.txt
-echo opencv-python>=4.5.3 >> requirements.txt
-echo numpy>=1.20.0 >> requirements.txt
-echo torch>=1.7.0 >> requirements.txt
-echo torchvision>=0.8.1 >> requirements.txt
-echo ultralytics>=8.0.0 >> requirements.txt
-echo Pillow>=9.5.0 >> requirements.txt
-echo pyserial>=3.5 >> requirements.txt
-echo pyyaml>=5.1 >> requirements.txt
-echo packaging >> requirements.txt
-echo tqdm >> requirements.txt
+(
+echo # DeepSight Studio Requirements
+echo opencv-python>=4.5.3
+echo numpy>=1.20.0
+echo torch>=1.7.0
+echo torchvision>=0.8.1
+echo ultralytics>=8.0.0
+echo Pillow>=9.5.0
+echo pyserial>=3.5
+echo pyyaml>=5.1
+echo packaging
+echo tqdm
+) > requirements.txt
 echo requirements.txt created successfully.
 
 :: Install dependencies with improved progress tracking
 echo.
 echo Installing dependencies...
 echo This will take some time. Please be patient.
-
-:: Modification to handle package installation more robustly
 pip install -r requirements.txt -v
-pip install pillow
-python -m pip install pillow
-
-:: EXPLICITLY INSTALL PYSERIAL
-echo Installing pyserial...
-pip install pyserial
-python -m pip install pyserial
-
-:: Verify pyserial installation
-python -c "import serial; print('Serial module installed successfully')"
-
-:: Check if pip completed successfully
-pip list > nul 2>&1
 if %errorLevel% neq 0 (
-    echo Warning: There may have been issues with package installation.
-) else (
-    echo All dependencies installed successfully.
+    echo Failed to install one or more dependencies.
+    pause
+    exit /b 1
+)
+echo Dependencies installed successfully.
+
+:: Verify installations
+echo.
+echo Verifying installation of pyserial...
+python -c "import serial; print('Serial module installed successfully')"
+if %errorLevel% neq 0 (
+    echo Warning: PySerial verification failed.
 )
 
-:: Verify Pillow installation
+echo Verifying installation of Pillow...
 python -c "import PIL; print('Pillow version: ' + PIL.__version__)"
+if %errorLevel% neq 0 (
+    echo Warning: Pillow verification failed.
+)
 
 :: Clone YOLOv5 repository
 if not exist yolov5 (
@@ -245,39 +253,41 @@ if not exist "Orbitron-VariableFont_wght.ttf" (
 if not exist "maintenance.json" (
     echo.
     echo Creating default configuration file...
-    echo { > maintenance.json
-    echo     "camera_settings": { >> maintenance.json
-    echo         "selected_camera": 0, >> maintenance.json
-    echo         "resolution": "640x480" >> maintenance.json
-    echo     }, >> maintenance.json
-    echo     "labeling_settings": { >> maintenance.json
-    echo         "canny_threshold1": { >> maintenance.json
-    echo             "min": 0, >> maintenance.json
-    echo             "max": 750, >> maintenance.json
-    echo             "value": 475 >> maintenance.json
-    echo         }, >> maintenance.json
-    echo         "canny_threshold2": { >> maintenance.json
-    echo             "min": 0, >> maintenance.json
-    echo             "max": 750, >> maintenance.json
-    echo             "value": 400 >> maintenance.json
-    echo         } >> maintenance.json
-    echo     }, >> maintenance.json
-    echo     "training_settings": { >> maintenance.json
-    echo         "model_used": "YOLOv5", >> maintenance.json
-    echo         "model_weights": "%MODEL_DIR%\yolov5\yolov5s.pt", >> maintenance.json
-    echo         "data_config": "", >> maintenance.json
-    echo         "img_size": "640", >> maintenance.json
-    echo         "batch_size": "16", >> maintenance.json
-    echo         "epochs": "50", >> maintenance.json
-    echo         "project_name": "%MODEL_DIR%" >> maintenance.json
-    echo     }, >> maintenance.json
-    echo     "hardware_settings": { >> maintenance.json
-    echo         "com_port": "COM1", >> maintenance.json
-    echo         "baud_rate": "115200" >> maintenance.json
-    echo     }, >> maintenance.json
-    echo     "video_width": 640, >> maintenance.json
-    echo     "video_height": 480 >> maintenance.json
-    echo } >> maintenance.json
+    (
+    echo {
+    echo     "camera_settings": {
+    echo         "selected_camera": 0,
+    echo         "resolution": "640x480"
+    echo     },
+    echo     "labeling_settings": {
+    echo         "canny_threshold1": {
+    echo             "min": 0,
+    echo             "max": 750,
+    echo             "value": 475
+    echo         },
+    echo         "canny_threshold2": {
+    echo             "min": 0,
+    echo             "max": 750,
+    echo             "value": 400
+    echo         }
+    echo     },
+    echo     "training_settings": {
+    echo         "model_used": "YOLOv5",
+    echo         "model_weights": "%MODEL_DIR%\yolov5\yolov5s.pt",
+    echo         "data_config": "",
+    echo         "img_size": "640",
+    echo         "batch_size": "16",
+    echo         "epochs": "50",
+    echo         "project_name": "%MODEL_DIR%"
+    echo     },
+    echo     "hardware_settings": {
+    echo         "com_port": "COM1",
+    echo         "baud_rate": "115200"
+    echo     },
+    echo     "video_width": 640,
+    echo     "video_height": 480
+    echo }
+    ) > maintenance.json
     echo Default configuration file created.
 )
 
@@ -293,12 +303,14 @@ echo Training data directories created.
 :: Create launcher batch file
 echo.
 echo Creating launcher script...
-echo @echo off > launch_deepsight.bat
-echo call "%BASE_DIR%\venv\Scripts\activate" >> launch_deepsight.bat
-echo echo Starting DeepSight Studio... >> launch_deepsight.bat
-echo echo Model weights directory: %MODEL_DIR% >> launch_deepsight.bat
-echo python gui.py >> launch_deepsight.bat
-echo pause >> launch_deepsight.bat
+(
+echo @echo off
+echo call "%BASE_DIR%\venv\Scripts\activate.bat"
+echo echo Starting DeepSight Studio...
+echo echo Model weights directory: %MODEL_DIR%
+echo python gui.py
+echo pause
+) > launch_deepsight.bat
 echo Launcher script created.
 
 :: Create desktop shortcut
