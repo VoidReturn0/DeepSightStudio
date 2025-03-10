@@ -1,0 +1,43 @@
+{
+    "camera_settings": {
+        "selected_camera": 0,
+        "resolution": "640x480"
+    },
+    "current_roi": [
+        535,
+        169,
+        859,
+        448
+    ],
+    "training_center": [
+        697,
+        308
+    ],
+    "labeling_settings": {
+        "canny_threshold1": {
+            "min": 0,
+            "max": 750,
+            "value": 475
+        },
+        "canny_threshold2": {
+            "min": 0,
+            "max": 750,
+            "value": 400
+        }
+    },
+    "training_settings": {
+        "model_used": "YOLOv5",
+        "model_weights": "yolov5s.pt",
+        "data_config": "",
+        "img_size": "640",
+        "batch_size": "16",
+        "epochs": "50",
+        "project_name": ""
+    },
+    "hardware_settings": {
+        "com_port": "COM9",
+        "baud_rate": "115200"
+    },
+    "video_width": 640,
+    "video_height": 480
+}
