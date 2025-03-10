@@ -114,38 +114,13 @@ echo packaging >> requirements.txt
 echo tqdm >> requirements.txt
 echo requirements.txt created successfully.
 
-:: Install dependencies with package counter
+:: Install dependencies with improved progress tracking
 echo.
 echo Installing dependencies...
 echo This will take some time. Please be patient.
 
-:: Create a temporary file to count installations
-echo 0 > %TEMP%\pkg_count.txt
-echo 0 > %TEMP%\total_pkgs.txt
-
-:: Extract total package count first by running a dry run
-pip install --no-deps --dry-run -r requirements.txt > %TEMP%\dry_run.txt
-findstr /C:"Collecting" %TEMP%\dry_run.txt > %TEMP%\collect_lines.txt
-for /f %%i in ('type %TEMP%\collect_lines.txt ^| find /c /v ""') do set TOTAL_PKGS=%%i
-echo %TOTAL_PKGS% > %TEMP%\total_pkgs.txt
-
-:: Install with a custom callback script to show progress
-echo @echo off > %TEMP%\pkg_callback.bat
-echo set /p PKG_COUNT=^<%TEMP%\pkg_count.txt >> %TEMP%\pkg_callback.bat
-echo set /a PKG_COUNT+=1 >> %TEMP%\pkg_callback.bat
-echo echo !PKG_COUNT! ^> %TEMP%\pkg_count.txt >> %TEMP%\pkg_callback.bat
-echo set /p TOTAL=^<%TEMP%\total_pkgs.txt >> %TEMP%\pkg_callback.bat
-echo set /a PCT=!PKG_COUNT! * 100 / !TOTAL! >> %TEMP%\pkg_callback.bat
-echo echo Installing package !PKG_COUNT! of !TOTAL! ^(!PCT!%%^) >> %TEMP%\pkg_callback.bat
-
-:: Hook the callback into pip's process
-set PIP_PROGRESS_BAR=off
-
-:: Now run the actual installation with verbose output
-echo Starting installation... (Package 0 of %TOTAL_PKGS% - 0%%)
-for /f "tokens=*" %%p in ('pip install -r requirements.txt -v 2^>^&1 ^| findstr /C:"Collecting"') do (
-    call %TEMP%\pkg_callback.bat
-)
+:: Modification to handle package installation more robustly
+pip install -r requirements.txt -v
 
 :: Check if pip completed successfully
 pip list > nul 2>&1
@@ -154,13 +129,6 @@ if %errorLevel% neq 0 (
 ) else (
     echo All dependencies installed successfully.
 )
-
-:: Remove temporary files
-del %TEMP%\pkg_count.txt > nul 2>&1
-del %TEMP%\total_pkgs.txt > nul 2>&1
-del %TEMP%\pkg_callback.bat > nul 2>&1
-del %TEMP%\dry_run.txt > nul 2>&1
-del %TEMP%\collect_lines.txt > nul 2>&1
 
 :: Clone YOLOv5 repository
 if not exist yolov5 (
