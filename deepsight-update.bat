@@ -48,6 +48,7 @@ if "%CHOICE%"=="1" (
     pip install --upgrade -r requirements.txt
     
     echo All dependencies updated.
+    echo Please hit the Enter key!!!
 )
 
 if "%CHOICE%"=="2" (
