@@ -68,9 +68,7 @@ if errorlevel 1 (
 :: Install dependencies - make sure to use the venv pip directly
 echo Installing dependencies...
 echo This may take a few minutes...
-
 "%CD%\venv\Scripts\pip" install --upgrade pip
-
 echo Installing core dependencies...
 "%CD%\venv\Scripts\pip" install opencv-python numpy Pillow pyserial pyyaml tqdm
 echo Installing PyTorch...
@@ -78,7 +76,6 @@ echo Installing PyTorch...
 echo Installing ultralytics...
 "%CD%\venv\Scripts\pip" install ultralytics
 echo.
-
 :: Verify installations
 echo Verifying installations...
 python -c "import sys; print('Python version:', sys.version)"
@@ -87,6 +84,7 @@ python -c "import cv2; print('OpenCV installed successfully')" || echo WARNING: 
 python -c "import torch; print('PyTorch installed successfully')" || echo WARNING: PyTorch installation failed
 python -c "import numpy; print('NumPy installed successfully')" || echo WARNING: NumPy installation failed
 python -c "import serial; print('PySerial installed successfully')" || echo WARNING: PySerial installation failed
+python -c "import yaml; print('PyYAML installed successfully')" || echo WARNING: PyYAML installation failed
 echo.
 
 :: Download YOLOv5
