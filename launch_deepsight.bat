@@ -19,6 +19,13 @@ if exist venv\Scripts\activate.bat (
 
 echo Checking dependencies...
 
+python -c "import yaml" 2>nul
+if errorlevel 1 (
+    echo Installing missing PyYAML package...
+    pip install pyyaml
+)
+
+REM Existing dependency checks remain the same
 python -c "import PIL" 2>nul
 if errorlevel 1 (
     echo Installing missing Pillow package...
@@ -35,6 +42,12 @@ python -c "import torch" 2>nul
 if errorlevel 1 (
     echo Installing missing PyTorch package...
     pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+)
+
+python -c "import serial" 2>nul
+if errorlevel 1 (
+    echo Installing missing PySerial package...
+    pip install pyserial
 )
 
 echo ===== Launching DeepSight Studio =====
