@@ -87,6 +87,7 @@ if "%CHOICE%"=="2" (
 )
 
 echo.
+echo 
 echo Would you like to update the code from GitHub? (y/n)
 set /p UPDATE_CODE="Your choice: "
 
