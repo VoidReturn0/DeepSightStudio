@@ -91,6 +91,117 @@ python -m pip install --upgrade virtualenv
 echo Done.
 
 :: Create requirements.txt file
+echo.@echo off
+setlocal enabledelayedexpansion
+
+echo ===============================================
+echo        DeepSight Studio Installation
+echo ===============================================
+echo.
+
+:: Check for admin privileges
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo This script requires administrator privileges.
+    echo Please right-click and select "Run as administrator".
+    echo.
+    pause
+    exit /b 1
+)
+
+:: Set BASE_DIR to current directory (removing any trailing backslash)
+set BASE_DIR=%~dp0
+set BASE_DIR=%BASE_DIR:~0,-1%
+echo Using current directory for installation: %BASE_DIR%
+echo.
+
+:: Use BASE_DIR as the model weights directory
+set MODEL_DIR=%BASE_DIR%
+echo Using installation directory for model weights: %MODEL_DIR%
+echo.
+
+:: Verify Python executable and permissions
+echo Checking Python installation and permissions...
+where python > temp_python_path.txt
+set /p PYTHON_PATH=<temp_python_path.txt
+del temp_python_path.txt
+
+echo Found Python at: %PYTHON_PATH%
+echo Testing Python permissions...
+python -c "print('Python access test successful')" > nul 2>&1
+if %errorLevel% neq 0 (
+    echo ERROR: Cannot execute Python. Please check your permissions.
+    pause
+    exit /b 1
+)
+
+:: Check for Python 3.8+
+python --version >nul 2>&1
+if %errorLevel% neq 0 (
+    echo Python not found. Please install Python 3.8 or newer manually.
+    echo Visit: https://www.python.org/downloads/
+    pause
+    exit /b 1
+) else (
+    for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
+    echo Found Python !PYTHON_VERSION!
+    
+    :: Check if version is at least 3.8
+    for /f "tokens=1,2 delims=." %%a in ("!PYTHON_VERSION!") do (
+        set MAJOR=%%a
+        set MINOR=%%b
+    )
+    
+    if !MAJOR! LSS 3 (
+        echo Python 3.8+ required, but found !PYTHON_VERSION!
+        pause
+        exit /b 1
+    ) else (
+        if !MAJOR! EQU 3 (
+            if !MINOR! LSS 8 (
+                echo Python 3.8+ required, but found !PYTHON_VERSION!
+                pause
+                exit /b 1
+            )
+        )
+    )
+)
+
+:: Create and activate the virtual environment
+echo.
+echo Creating virtual environment "DeepSightStudio"...
+
+:: First remove any existing venv directory if it exists
+if exist "%BASE_DIR%\venv" (
+    echo Removing existing virtual environment...
+    rmdir /s /q "%BASE_DIR%\venv"
+)
+
+python -m venv "%BASE_DIR%\venv"
+if %errorLevel% neq 0 (
+    echo Failed to create virtual environment.
+    pause
+    exit /b 1
+)
+echo Virtual environment created.
+
+echo.
+echo Activating virtual environment...
+call venv\Scripts\activate.bat
+if %errorLevel% neq 0 (
+    echo Failed to activate virtual environment.
+    pause
+    exit /b 1
+)
+
+:: Install/upgrading pip and virtualenv
+echo.
+echo Installing/upgrading pip and virtualenv...
+python -m pip install --upgrade pip
+python -m pip install --upgrade virtualenv
+echo Done.
+
+:: Create requirements.txt file
 echo.
 echo Creating requirements.txt...
 (
@@ -112,29 +223,65 @@ echo requirements.txt created successfully.
 echo.
 echo Installing dependencies...
 echo This will take some time. Please be patient.
-pip install -r requirements.txt -v
+pip install -r requirements.txt
 if %errorLevel% neq 0 (
     echo Failed to install one or more dependencies.
+    echo Try installing them individually for better error reporting.
+    
+    :: Try installing packages individually to identify problematic ones
+    echo.
+    echo Installing packages individually...
+    for %%p in (opencv-python numpy torch torchvision ultralytics Pillow pyserial pyyaml packaging tqdm) do (
+        echo Installing %%p...
+        pip install %%p
+        if !errorLevel! neq 0 (
+            echo ERROR: Failed to install %%p
+        ) else (
+            echo %%p installed successfully.
+        )
+    )
+    
+    echo.
+    echo Some dependencies failed to install. Consider installing them manually.
     pause
     exit /b 1
 )
 echo Dependencies installed successfully.
 
-:: Verify installations
+:: Verify installations (more comprehensive)
 echo.
-echo Verifying installation of pyserial...
-python -c "import serial; print('Serial module installed successfully')"
+echo Verifying installations...
+python -c "import cv2; print('OpenCV installed successfully, version:', cv2.__version__)"
 if %errorLevel% neq 0 (
-    echo Warning: PySerial verification failed.
+    echo WARNING: OpenCV verification failed.
 )
 
-echo Verifying installation of Pillow...
-python -c "import PIL; print('Pillow version: ' + PIL.__version__)"
+python -c "import numpy; print('NumPy installed successfully, version:', numpy.__version__)"
 if %errorLevel% neq 0 (
-    echo Warning: Pillow verification failed.
+    echo WARNING: NumPy verification failed.
 )
 
-:: Clone YOLOv5 repository
+python -c "import torch; print('PyTorch installed successfully, version:', torch.__version__)"
+if %errorLevel% neq 0 (
+    echo WARNING: PyTorch verification failed.
+)
+
+python -c "import PIL; print('Pillow installed successfully, version:', PIL.__version__)"
+if %errorLevel% neq 0 (
+    echo WARNING: Pillow verification failed.
+)
+
+python -c "import serial; print('PySerial installed successfully, version:', serial.VERSION)"
+if %errorLevel% neq 0 (
+    echo WARNING: PySerial verification failed.
+)
+
+python -c "import yaml; print('PyYAML installed successfully, version:', yaml.__version__)"
+if %errorLevel% neq 0 (
+    echo WARNING: PyYAML verification failed.
+)
+
+:: Clone YOLOv5 repository with improved reliability
 if not exist yolov5 (
     echo.
     echo Setting up YOLOv5...
@@ -144,31 +291,35 @@ if not exist yolov5 (
         echo Git is not installed. Using direct download instead...
         echo Downloading YOLOv5... (0%)
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://github.com/ultralytics/yolov5/archive/refs/heads/master.zip', '%BASE_DIR%\yolov5.zip')"
-        echo Download complete! (100%)
-        
-        echo Extracting YOLOv5... (0%)
-        powershell -Command "Expand-Archive -Path '%BASE_DIR%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
-        if exist "%BASE_DIR%\yolov5-master" (
-            ren "%BASE_DIR%\yolov5-master" "yolov5"
-        )
-        if exist "%BASE_DIR%\yolov5.zip" (
-            del "%BASE_DIR%\yolov5.zip"
-        )
-        echo Extraction complete! (100%)
-        
-        if not exist "%BASE_DIR%\yolov5" (
-            echo Warning: Failed to download YOLOv5 repository.
+        if %errorLevel% neq 0 (
+            echo ERROR: Failed to download YOLOv5 repository.
             echo Please download it manually from https://github.com/ultralytics/yolov5
-        ) else (
-            echo YOLOv5 downloaded and extracted successfully.
-        )
+        ) else {
+            echo Download complete! (100%)
+            
+            echo Extracting YOLOv5... (0%)
+            powershell -Command "Expand-Archive -Path '%BASE_DIR%\yolov5.zip' -DestinationPath '%BASE_DIR%' -Force"
+            if exist "%BASE_DIR%\yolov5-master" (
+                ren "%BASE_DIR%\yolov5-master" "yolov5"
+            )
+            if exist "%BASE_DIR%\yolov5.zip" (
+                del "%BASE_DIR%\yolov5.zip"
+            )
+            echo Extraction complete! (100%)
+            
+            if not exist "%BASE_DIR%\yolov5" (
+                echo WARNING: Failed to extract YOLOv5 repository.
+            ) else (
+                echo YOLOv5 downloaded and extracted successfully.
+            )
+        }
     ) else (
         echo Cloning YOLOv5 repository... (0%)
         git clone https://github.com/ultralytics/yolov5.git
         echo Cloning complete! (100%)
         
         if %errorLevel% neq 0 (
-            echo Warning: Failed to clone YOLOv5 repository.
+            echo WARNING: Failed to clone YOLOv5 repository.
             echo Please download it manually from https://github.com/ultralytics/yolov5
         ) else (
             echo YOLOv5 repository cloned successfully.
@@ -188,6 +339,15 @@ if not exist yolov8 (
     echo YOLOv8 directory already exists.
 )
 
+:: Create yolo_training_data directory for use with image_labeling.py
+if not exist "yolo_training_data" (
+    echo.
+    echo Creating YOLOv5 training data directory...
+    mkdir yolo_training_data\images
+    mkdir yolo_training_data\labels
+    echo Created yolo_training_data directories.
+)
+
 :: Download pre-trained weights for both YOLOv5 and YOLOv8
 echo.
 echo Downloading pre-trained model weights...
@@ -203,7 +363,7 @@ if not exist "%MODEL_DIR%\yolov5\yolov5s.pt" (
     echo Download complete! (100%)
     
     if %errorLevel% neq 0 (
-        echo Warning: Failed to download YOLOv5s weights.
+        echo WARNING: Failed to download YOLOv5s weights.
     ) else (
         echo YOLOv5s weights downloaded successfully.
     )
@@ -218,7 +378,7 @@ if not exist "%MODEL_DIR%\yolov8\yolov8n.pt" (
     echo Download complete! (100%)
     
     if %errorLevel% neq 0 (
-        echo Warning: Failed to download YOLOv8n weights.
+        echo WARNING: Failed to download YOLOv8n weights.
     ) else (
         echo YOLOv8n weights downloaded successfully.
     )
@@ -234,7 +394,7 @@ if not exist "Orbitron-VariableFont_wght.ttf" (
     echo Download complete! (100%)
     
     if %errorLevel% neq 0 (
-        echo Warning: Failed to download Orbitron font.
+        echo WARNING: Failed to download Orbitron font.
     ) else (
         echo Orbitron font downloaded successfully.
         echo Installing font...
@@ -301,10 +461,61 @@ echo Creating launcher script...
 (
 echo @echo off
 echo cd /d %BASE_DIR%
-echo call "%BASE_DIR%\venv\Scripts\activate.bat"
-echo echo Starting DeepSight Studio...
-echo echo Model weights directory: %MODEL_DIR%
+echo echo ===== DeepSight Studio Launcher =====
+echo echo Current directory: %%CD%%
+echo.
+echo REM Activate the virtual environment from the venv folder
+echo if exist venv\Scripts\activate.bat (
+echo     echo Activating virtual environment...
+echo     call venv\Scripts\activate.bat
+echo     if errorlevel 1 (
+echo         echo ERROR: Failed to activate virtual environment.
+echo         pause
+echo         exit /b 1
+echo     ^)
+echo ^) else (
+echo     echo ERROR: Virtual environment not found at %%CD%%\venv\Scripts\activate.bat
+echo     echo Please run the installer first.
+echo     pause
+echo     exit /b 1
+echo ^)
+echo.
+echo REM Debug: Print the active Python executable and version
+echo echo.
+echo echo === Environment Debug Info ===
+echo python -c "import sys; print('Using Python:', sys.executable^)"
+echo python -c "import sys; print('Python version:', sys.version^)"
+echo.
+echo REM Verify critical dependencies
+echo echo.
+echo echo === Checking Dependencies ===
+echo python -c "import cv2; print('OpenCV version:', cv2.__version__^)" 2^>nul
+echo if errorlevel 1 (
+echo     echo WARNING: OpenCV not properly installed. Some features may not work.
+echo ^)
+echo.
+echo python -c "import torch; print('PyTorch version:', torch.__version__^)" 2^>nul
+echo if errorlevel 1 (
+echo     echo WARNING: PyTorch not properly installed. Training features will not work.
+echo ^)
+echo.
+echo python -c "import PIL; print('Pillow version:', PIL.__version__^)" 2^>nul
+echo if errorlevel 1 (
+echo     echo WARNING: Pillow not properly installed. Image processing will be limited.
+echo ^)
+echo.
+echo echo.
+echo echo === Launching DeepSight Studio ===
+echo REM Run the gui.py script
 echo python gui.py
+echo.
+echo if errorlevel 1 (
+echo     echo ERROR: Failed to launch DeepSight Studio.
+echo     echo Please check the error messages above.
+echo     pause
+echo     exit /b 1
+echo ^)
+echo.
 echo pause
 ) > launch_deepsight.bat
 echo Launcher script created.
@@ -334,6 +545,9 @@ echo.
 :: Launch the application automatically
 echo Launching DeepSight Studio...
 start launch_deepsight.bat
+
+echo Press any key to exit...
+pause > nul
 
 echo Press any key to exit...
 pause > nul
