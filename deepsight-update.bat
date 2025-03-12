@@ -15,6 +15,13 @@ if exist maintenance.json (
 :: Activate virtual environment
 call venv\Scripts\activate.bat
 
+:: Generate requirements file based on installed packages
+echo Analyzing currently installed packages...
+pip freeze > current_requirements.txt
+:: Filter out .txt files that are not requirements
+findstr /v ".txt$" current_requirements.txt > requirements.txt
+del current_requirements.txt
+
 echo.
 echo Choose an option:
 echo 1. Update all dependencies
@@ -28,19 +35,17 @@ if "%CHOICE%"=="1" (
     echo Updating all dependencies...
     pip install --upgrade pip
     
-    :: Read requirements.txt if it exists
-    if exist requirements.txt (
-        echo Installing dependencies from requirements.txt...
-        pip install --upgrade -r requirements.txt
-    ) else (
-        :: Otherwise update common dependencies
-        echo No requirements.txt found, updating common dependencies...
-        pip install --upgrade opencv-python numpy Pillow pyserial pyyaml tqdm
-    )
-    
     :: Special handling for PyTorch (needs specific index URL)
+    echo Updating PyTorch with special URL...
     pip install --upgrade --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    
+    :: Update ultralytics separately as it's a key dependency
+    echo Updating Ultralytics...
     pip install --upgrade ultralytics
+    
+    :: Update remaining packages from generated requirements
+    echo Updating remaining packages...
+    pip install --upgrade -r requirements.txt
     
     echo All dependencies updated.
 )
@@ -117,20 +122,20 @@ if /i "%UPDATE_CODE%"=="y" (
     :copy_files
     echo Copying files from extracted directory...
     
-    :: Copy files
+    :: Copy only specific file types (exclude license/EULA files)
     echo Copying Python files...
     xcopy /y "%EXTRACTED_DIR%\*.py" "..\\" 
     
     echo Copying documentation files...
-    xcopy /y "%EXTRACTED_DIR%\*.md" "..\\"
-    xcopy /y "%EXTRACTED_DIR%\*.txt" "..\\" 
+    xcopy /y "%EXTRACTED_DIR%\README.md" "..\\"
     
     echo Copying resource files...
     xcopy /y "%EXTRACTED_DIR%\*.jpg" "..\\"
     xcopy /y "%EXTRACTED_DIR%\*.ttf" "..\\"
     
     echo Copying script files...
-    xcopy /y "%EXTRACTED_DIR%\*.bat" "..\\"
+    xcopy /y "%EXTRACTED_DIR%\deepsight-installer.bat" "..\\"
+    xcopy /y "%EXTRACTED_DIR%\launch_deepsight.bat" "..\\"
     
     :: Cleanup
     cd ..
@@ -148,6 +153,9 @@ if exist maintenance.json.bak (
     copy /y maintenance.json.bak maintenance.json
     echo Restored configuration from backup.
 )
+
+:: Clean up requirements file
+if exist requirements.txt del requirements.txt
 
 echo.
 echo ===============================================
