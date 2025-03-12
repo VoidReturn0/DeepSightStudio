@@ -25,7 +25,7 @@
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/DeepSightStudio.git
+   git clone https://github.com/VoidReturn0/DeepSightStudio.git
    cd DeepSightStudio
 
 Run the installer script as Administrator:
