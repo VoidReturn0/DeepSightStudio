@@ -27,9 +27,21 @@ if "%CHOICE%"=="1" (
     echo.
     echo Updating all dependencies...
     pip install --upgrade pip
-    pip install --upgrade opencv-python numpy Pillow pyserial pyyaml tqdm
+    
+    :: Read requirements.txt if it exists
+    if exist requirements.txt (
+        echo Installing dependencies from requirements.txt...
+        pip install --upgrade -r requirements.txt
+    ) else (
+        :: Otherwise update common dependencies
+        echo No requirements.txt found, updating common dependencies...
+        pip install --upgrade opencv-python numpy Pillow pyserial pyyaml tqdm
+    )
+    
+    :: Special handling for PyTorch (needs specific index URL)
     pip install --upgrade --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
     pip install --upgrade ultralytics
+    
     echo All dependencies updated.
 )
 
@@ -37,58 +49,42 @@ if "%CHOICE%"=="2" (
     echo.
     echo Checking for outdated packages...
     pip list --outdated
-    echo.
-    pause
     
     echo.
-    echo Would you like to update PyTorch? (y/n)
-    set /p UPDATE_TORCH="Your choice: "
-    if /i "%UPDATE_TORCH%"=="y" (
-        pip install --upgrade --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
-        echo PyTorch updated.
-        pause
-    )
-    
-    echo.
-    echo Would you like to update OpenCV? (y/n)
-    set /p UPDATE_CV="Your choice: "
-    if /i "%UPDATE_CV%"=="y" (
-        pip install --upgrade opencv-python
-        echo OpenCV updated.
-        pause
-    )
-    
-    echo.
-    echo Would you like to update Pillow? (y/n)
-    set /p UPDATE_PILLOW="Your choice: "
-    if /i "%UPDATE_PILLOW%"=="y" (
-        pip install --upgrade Pillow
-        echo Pillow updated.
-        pause
-    )
-    
-    echo.
-    echo Would you like to update NumPy? (y/n)
-    set /p UPDATE_NUMPY="Your choice: "
-    if /i "%UPDATE_NUMPY%"=="y" (
-        pip install --upgrade numpy
-        echo NumPy updated.
-        pause
-    )
-    
-    echo.
-    echo Would you like to update PySerial? (y/n)
-    set /p UPDATE_SERIAL="Your choice: "
-    if /i "%UPDATE_SERIAL%"=="y" (
-        pip install --upgrade pyserial
-        echo PySerial updated.
-        pause
+    echo Would you like to update outdated packages? (y/n)
+    set /p UPDATE_OUTDATED=
+    if /i "%UPDATE_OUTDATED%"=="y" (
+        :: Get list of outdated packages
+        pip list --outdated --format=freeze | findstr /v "torch torchvision" > outdated.txt
+        
+        :: Update all packages except torch/torchvision (needs special handling)
+        for /F "tokens=1 delims==" %%a in (outdated.txt) do (
+            echo Updating %%a...
+            pip install --upgrade %%a
+        )
+        
+        :: Update PyTorch separately with correct index URL
+        pip list --outdated --format=freeze | findstr "torch torchvision" > pytorch_outdated.txt
+        if not "%ERRORLEVEL%"=="1" (
+            echo Updating PyTorch with special URL...
+            pip install --upgrade --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        )
+        
+        :: Clean up
+        if exist outdated.txt del outdated.txt
+        if exist pytorch_outdated.txt del pytorch_outdated.txt
+        
+        echo Outdated packages have been updated.
     )
 )
 
 echo.
+echo ===============================================
+echo          Code Update Options
+echo ===============================================
+echo.
 echo Would you like to update the code from GitHub? (y/n)
-set /p UPDATE_CODE="Your choice: "
+set /p UPDATE_CODE=
 
 if /i "%UPDATE_CODE%"=="y" (
     echo.
@@ -100,7 +96,7 @@ if /i "%UPDATE_CODE%"=="y" (
     cd temp_update
     
     echo Downloading from GitHub...
-    curl -L -o deepsight.zip https://github.com/yourusername/DeepSightStudio/archive/refs/heads/main.zip
+    curl -L -o deepsight.zip https://github.com/VoidReturn0/DeepSightStudio/archive/refs/heads/main.zip
     if errorlevel 1 (
         echo Download failed. Check your internet connection.
         cd ..
@@ -113,38 +109,49 @@ if /i "%UPDATE_CODE%"=="y" (
     
     :: Find extracted directory
     for /d %%d in (*) do (
+        echo Found extracted directory: %%d
         set EXTRACTED_DIR=%%d
         goto copy_files
     )
     
     :copy_files
-    echo Files will be copied from: %EXTRACTED_DIR%
+    echo Copying files from extracted directory...
     
     :: Copy files
-    echo Copying new files to parent directory...
-    xcopy /y "%EXTRACTED_DIR%\*.py" "..\\"
+    echo Copying Python files...
+    xcopy /y "%EXTRACTED_DIR%\*.py" "..\\" 
+    
+    echo Copying documentation files...
     xcopy /y "%EXTRACTED_DIR%\*.md" "..\\"
     xcopy /y "%EXTRACTED_DIR%\*.txt" "..\\" 
+    
+    echo Copying resource files...
     xcopy /y "%EXTRACTED_DIR%\*.jpg" "..\\"
     xcopy /y "%EXTRACTED_DIR%\*.ttf" "..\\"
+    
+    echo Copying script files...
     xcopy /y "%EXTRACTED_DIR%\*.bat" "..\\"
     
     :: Cleanup
     cd ..
     rmdir /s /q temp_update
     
-    echo Code has been updated.
-    pause
+    echo.
+    echo ===============================================
+    echo Code has been successfully updated!
+    echo ===============================================
 )
 
 :end_update
 :: Restore configuration
 if exist maintenance.json.bak (
     copy /y maintenance.json.bak maintenance.json
-    echo Restored configuration.
+    echo Restored configuration from backup.
 )
 
 echo.
-echo Update process complete!
+echo ===============================================
+echo       Update process complete!
+echo ===============================================
 echo.
 pause
