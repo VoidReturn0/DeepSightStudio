@@ -122,6 +122,10 @@ if /i "%UPDATE_CODE%"=="y" (
     echo Copying new files...
     xcopy "%EXTRACTED_DIR%\*.py" "..\" /y
     xcopy "%EXTRACTED_DIR%\*.md" "..\" /y
+    xcopy "%EXTRACTED_DIR%\*.txt" "..\" /y
+    xcopy "%EXTRACTED_DIR%\*.jpg" "..\" /y
+    xcopy "%EXTRACTED_DIR%\*.ttf" "..\" /y
+    xcopy "%EXTRACTED_DIR%\*.bat" "..\" /y
     
     :: Cleanup
     cd ..
