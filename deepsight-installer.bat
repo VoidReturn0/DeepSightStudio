@@ -56,18 +56,27 @@ if errorlevel 1 (
 )
 echo.
 
-:: Install dependencies
+:: Verify we're using the venv Python
+echo Verifying virtual environment...
+python -c "import sys; print('Using Python:', sys.executable)"
+if errorlevel 1 (
+    echo Failed to verify virtual environment.
+    pause
+    exit /b 1
+)
+
+:: Install dependencies - make sure to use the venv pip directly
 echo Installing dependencies...
 echo This may take a few minutes...
 
-pip install --upgrade pip
+"%CD%\venv\Scripts\pip" install --upgrade pip
 
 echo Installing core dependencies...
-pip install opencv-python numpy Pillow pyserial pyyaml tqdm
+"%CD%\venv\Scripts\pip" install opencv-python numpy Pillow pyserial pyyaml tqdm
 echo Installing PyTorch...
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+"%CD%\venv\Scripts\pip" install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 echo Installing ultralytics...
-pip install ultralytics
+"%CD%\venv\Scripts\pip" install ultralytics
 echo.
 
 :: Verify installations
@@ -77,6 +86,7 @@ python -c "import PIL; print('Pillow installed successfully')" || echo WARNING: 
 python -c "import cv2; print('OpenCV installed successfully')" || echo WARNING: OpenCV installation failed
 python -c "import torch; print('PyTorch installed successfully')" || echo WARNING: PyTorch installation failed
 python -c "import numpy; print('NumPy installed successfully')" || echo WARNING: NumPy installation failed
+python -c "import serial; print('PySerial installed successfully')" || echo WARNING: PySerial installation failed
 echo.
 
 :: Download YOLOv5
@@ -105,13 +115,6 @@ echo.
 echo Downloading model weights...
 curl -L -o "%CD%\yolov5\yolov5s.pt" https://github.com/ultralytics/yolov5/releases/download/v7.0/yolov5s.pt
 curl -L -o "%CD%\yolov8\yolov8n.pt" https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt
-echo.
-
-:: Download Orbitron font
-echo Downloading Orbitron font...
-curl -L -o "%CD%\Orbitron-VariableFont_wght.ttf" https://github.com/google/fonts/raw/main/ofl/orbitron/Orbitron-VariableFont_wght.ttf
-echo Installing font...
-powershell -Command "$fonts = (New-Object -ComObject Shell.Application).Namespace(0x14); $fonts.CopyHere('%CD%\Orbitron-VariableFont_wght.ttf')"
 echo.
 
 :: Create maintenance.json with absolute paths
@@ -163,7 +166,7 @@ mkdir "%CD%\training_data\dice" 2>nul
 mkdir "%CD%\runs\train" 2>nul
 echo.
 
-:: Create launcher script with absolute paths
+:: Create launcher script with absolute paths and package verification
 echo Creating launcher script...
 (
 echo @echo off
@@ -190,19 +193,25 @@ echo.
 echo python -c "import PIL" 2^>nul
 echo if errorlevel 1 ^(
 echo     echo Installing missing Pillow package...
-echo     pip install Pillow
+echo     "%%CD%%\venv\Scripts\pip" install Pillow
 echo ^)
 echo.
 echo python -c "import cv2" 2^>nul
 echo if errorlevel 1 ^(
 echo     echo Installing missing OpenCV package...
-echo     pip install opencv-python
+echo     "%%CD%%\venv\Scripts\pip" install opencv-python
 echo ^)
 echo.
 echo python -c "import torch" 2^>nul
 echo if errorlevel 1 ^(
 echo     echo Installing missing PyTorch package...
-echo     pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+echo     "%%CD%%\venv\Scripts\pip" install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+echo ^)
+echo.
+echo python -c "import serial" 2^>nul
+echo if errorlevel 1 ^(
+echo     echo Installing missing PySerial package...
+echo     "%%CD%%\venv\Scripts\pip" install pyserial
 echo ^)
 echo.
 echo echo ===== Launching DeepSight Studio =====
