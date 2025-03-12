@@ -33,16 +33,21 @@ echo === Checking Dependencies ===
 python -c "import cv2; print('OpenCV version:', cv2.__version__)" 2>nul
 if errorlevel 1 (
     echo WARNING: OpenCV not properly installed. Some features may not work.
+    pip install opencv-python
 )
 
 python -c "import torch; print('PyTorch version:', torch.__version__)" 2>nul
 if errorlevel 1 (
     echo WARNING: PyTorch not properly installed. Training features will not work.
+    echo Installing PyTorch...
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 )
 
 python -c "import PIL; print('Pillow version:', PIL.__version__)" 2>nul
 if errorlevel 1 (
     echo WARNING: Pillow not properly installed. Image processing will be limited.
+    echo Installing Pillow...
+    pip install Pillow
 )
 
 echo.
