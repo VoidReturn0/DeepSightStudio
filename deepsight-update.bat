@@ -87,7 +87,6 @@ if "%CHOICE%"=="2" (
 )
 
 echo.
-
 echo Would you like to update the code from GitHub? (y/n)
 set /p UPDATE_CODE="Your choice: "
 
@@ -119,13 +118,16 @@ if /i "%UPDATE_CODE%"=="y" (
     )
     
     :copy_files
-    echo Copying new files...
-    xcopy "%EXTRACTED_DIR%\*.py" "..\" /y
-    xcopy "%EXTRACTED_DIR%\*.md" "..\" /y
-    xcopy "%EXTRACTED_DIR%\*.txt" "..\" /y
-    xcopy "%EXTRACTED_DIR%\*.jpg" "..\" /y
-    xcopy "%EXTRACTED_DIR%\*.ttf" "..\" /y
-    xcopy "%EXTRACTED_DIR%\*.bat" "..\" /y
+    echo Files will be copied from: %EXTRACTED_DIR%
+    
+    :: Copy files
+    echo Copying new files to parent directory...
+    xcopy /y "%EXTRACTED_DIR%\*.py" "..\\"
+    xcopy /y "%EXTRACTED_DIR%\*.md" "..\\"
+    xcopy /y "%EXTRACTED_DIR%\*.txt" "..\\" 
+    xcopy /y "%EXTRACTED_DIR%\*.jpg" "..\\"
+    xcopy /y "%EXTRACTED_DIR%\*.ttf" "..\\"
+    xcopy /y "%EXTRACTED_DIR%\*.bat" "..\\"
     
     :: Cleanup
     cd ..
@@ -138,7 +140,7 @@ if /i "%UPDATE_CODE%"=="y" (
 :end_update
 :: Restore configuration
 if exist maintenance.json.bak (
-    copy maintenance.json.bak maintenance.json /y
+    copy /y maintenance.json.bak maintenance.json
     echo Restored configuration.
 )
 
