@@ -51,22 +51,25 @@ if "%UPDATE_CHOICE%"=="1" (
     "%CD%\venv\Scripts\pip" install --upgrade pip
     
     :: Get a list of all installed packages and update them
+    echo.
     echo Updating all packages...
-    for /f "tokens=1" %%i in ('"%CD%\venv\Scripts\pip" list --format=freeze ^| findstr /V "^-e"') do (
-        for /f "tokens=1 delims==" %%j in ("%%i") do (
-            if "%%j"=="torch" (
-                echo Updating %%j...
-                "%CD%\venv\Scripts\pip" install --upgrade --no-cache-dir %%j --index-url https://download.pytorch.org/whl/cpu
-            ) else if "%%j"=="torchvision" (
-                echo Updating %%j...
-                "%CD%\venv\Scripts\pip" install --upgrade --no-cache-dir %%j --index-url https://download.pytorch.org/whl/cpu
-            ) else (
-                echo Updating %%j...
-                "%CD%\venv\Scripts\pip" install --upgrade %%j
-            )
-        )
+    
+    :: Special handling for torch and torchvision
+    echo Updating PyTorch packages...
+    "%CD%\venv\Scripts\pip" install --upgrade --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    
+    :: Update other common packages
+    echo Updating common packages...
+    "%CD%\venv\Scripts\pip" install --upgrade opencv-python numpy Pillow pyserial pyyaml tqdm ultralytics
+    
+    :: List remaining packages to update
+    for /f "tokens=1" %%i in ('"%CD%\venv\Scripts\pip" freeze ^| findstr /V "torch torchvision opencv-python numpy Pillow pyserial pyyaml tqdm ultralytics pip"') do (
+        echo Updating %%i...
+        "%CD%\venv\Scripts\pip" install --upgrade %%i
     )
+    
     echo All dependencies updated.
+    pause
 ) else if "%UPDATE_CHOICE%"=="2" (
     :: Check for pip updates first
     echo.
@@ -195,3 +198,4 @@ echo Run launch_deepsight.bat to start the application.
 echo.
 
 pause
+exit /b 0
