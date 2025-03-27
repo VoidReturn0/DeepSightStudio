@@ -4,14 +4,14 @@
         "resolution": "640x480"
     },
     "current_roi": [
-        535,
-        169,
-        859,
-        448
+        284,
+        118,
+        562,
+        411
     ],
     "training_center": [
-        697,
-        308
+        423,
+        264
     ],
     "labeling_settings": {
         "canny_threshold1": {
@@ -28,11 +28,11 @@
     "training_settings": {
         "model_used": "YOLOv5",
         "model_weights": "yolov5s.pt",
-        "data_config": "",
+        "data_config": "yolo_training_data\\data.yaml",
         "img_size": "640",
-        "batch_size": "16",
-        "epochs": "50",
-        "project_name": ""
+        "batch_size": "8",
+        "epochs": "1",
+        "project_name": "yolo_training_data"
     },
     "hardware_settings": {
         "com_port": "COM9",

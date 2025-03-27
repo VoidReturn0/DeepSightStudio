@@ -142,6 +142,11 @@ class TrainingApp(tk.Tk):
 
         self.title("Training Image Capture")
         self.geometry(f"{self.window_width}x{self.window_height}")
+        
+        # Set minimum window size to prevent shrinking
+        self.minsize(800, 600)
+        # Set maximum window size to prevent growing
+        self.maxsize(1920, 1080)
 
         # Setup custom fonts (Orbitron if available, else Helvetica)
         available_fonts = tkFont.families()
@@ -155,6 +160,7 @@ class TrainingApp(tk.Tk):
         self.running = True
         self.training_thread = None
         self.current_roi = None
+        self.training_center = None
 
         # Open camera using the selected index from JSON
         selected_camera = self.config_data.get("camera_settings", {}).get("selected_camera", 0)
@@ -165,8 +171,14 @@ class TrainingApp(tk.Tk):
 
         # ROI variables
         self.roi = None
-        self.roi_start = None
-        self.roi_end = None
+        self.start_x = None
+        self.start_y = None
+        
+        # Load existing ROI and center from config if available
+        if "current_roi" in self.config_data:
+            self.roi = self.config_data["current_roi"]
+        if "training_center" in self.config_data:
+            self.training_center = self.config_data["training_center"]
 
         # --- Video Panels ---
         video_container = tk.Frame(self, width=self.window_width, height=self.video_height, bg="#1e1e1e")
@@ -317,67 +329,185 @@ class TrainingApp(tk.Tk):
 
     # --- ROI Mouse Handlers ---
     def on_mouse_down(self, event):
-        self.start_x = event.x
-        self.start_y = event.y
+        # Get label dimensions to calculate scaling
+        label_width = self.raw_label.winfo_width()
+        label_height = self.raw_label.winfo_height()
+        
+        # Adjust coordinates based on the actual displayed image size
+        if label_width > 1 and label_height > 1:
+            scale_x = self.video_width / label_width
+            scale_y = self.video_height / label_height
+            self.start_x = int(event.x * scale_x)
+            self.start_y = int(event.y * scale_y)
+        else:
+            self.start_x = event.x
+            self.start_y = event.y
+        
         self.roi = None
 
     def on_mouse_move(self, event):
-        self.roi = (min(self.start_x, event.x), min(self.start_y, event.y),
-                    max(self.start_x, event.x), max(self.start_y, event.y))
+        if self.start_x is None or self.start_y is None:
+            return
+            
+        # Get label dimensions to calculate scaling
+        label_width = self.raw_label.winfo_width()
+        label_height = self.raw_label.winfo_height()
+        
+        # Adjust coordinates based on the actual displayed image size
+        if label_width > 1 and label_height > 1:
+            scale_x = self.video_width / label_width
+            scale_y = self.video_height / label_height
+            current_x = int(event.x * scale_x)
+            current_y = int(event.y * scale_y)
+        else:
+            current_x = event.x
+            current_y = event.y
+            
+        self.roi = (min(self.start_x, current_x), min(self.start_y, current_y),
+                   max(self.start_x, current_x), max(self.start_y, current_y))
         self.update_display()
 
     def on_mouse_up(self, event):
         if self.start_x is None or self.start_y is None:
             return
-        x1, y1 = self.start_x, self.start_y
-        x2, y2 = event.x, event.y
-        self.roi = (min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2))
-        training_center = ((self.roi[0] + self.roi[2]) // 2, (self.roi[1] + self.roi[3]) // 2)
+            
+        # Get label dimensions to calculate scaling
+        label_width = self.raw_label.winfo_width()
+        label_height = self.raw_label.winfo_height()
+        
+        # Adjust coordinates based on the actual displayed image size
+        if label_width > 1 and label_height > 1:
+            scale_x = self.video_width / label_width
+            scale_y = self.video_height / label_height
+            current_x = int(event.x * scale_x)
+            current_y = int(event.y * scale_y)
+        else:
+            current_x = event.x
+            current_y = event.y
+            
+        self.roi = (min(self.start_x, current_x), min(self.start_y, current_y),
+                   max(self.start_x, current_x), max(self.start_y, current_y))
+                   
+        self.training_center = ((self.roi[0] + self.roi[2]) // 2, (self.roi[1] + self.roi[3]) // 2)
         self.config_data["current_roi"] = self.roi
-        self.config_data["training_center"] = training_center
+        self.config_data["training_center"] = self.training_center
         save_config(self.config_data, self.config_file)
-        print("ROI set to:", self.roi, "Center:", training_center)
+        print("ROI set to:", self.roi, "Center:", self.training_center)
         self.update_display()
+
+    def update_display(self):
+        """Update the display with ROI and crosshair."""
+        ret, frame = (self.cap.read() if self.cap is not None else (False, None))
+        if not ret:
+            return
+        
+        # Create a copy of the frame to draw on
+        display_frame = frame.copy()
+        display_frame = cv2.resize(display_frame, (self.video_width, self.video_height))
+        
+        # Draw ROI rectangle if it exists
+        if self.roi:
+            x1, y1, x2, y2 = self.roi
+            cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            
+            # Draw green crosshair at center of ROI
+            center_x = (x1 + x2) // 2
+            center_y = (y1 + y2) // 2
+            cross_size = 15
+            cross_color = (0, 255, 0)  # Green
+            cv2.line(display_frame, (center_x - cross_size, center_y), (center_x + cross_size, center_y), cross_color, 2)
+            cv2.line(display_frame, (center_x, center_y - cross_size), (center_x, center_y + cross_size), cross_color, 2)
+        
+        # Convert to RGB and update the display
+        display_rgb = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
+        self.update_image(self.raw_label, display_rgb, (self.video_width, self.video_height))
 
     def update_raw_feed(self):
         if not self.running:
             return
         ret, frame = (self.cap.read() if self.cap is not None else (False, None))
         if ret:
-            # Always resize the full frame to configured dimensions
+            # Resize the frame to the fixed display dimensions
             frame_resized = cv2.resize(frame, (self.video_width, self.video_height))
+            display_frame = frame_resized.copy()
+            
+            # Draw ROI and crosshair if they exist
             if self.roi:
-                # Crop to ROI using the ROI coordinates on the resized frame
-                rx1, ry1, rx2, ry2 = self.roi
-                rx1 = max(0, rx1)
-                ry1 = max(0, ry1)
-                rx2 = min(self.video_width, rx2)
-                ry2 = min(self.video_height, ry2)
-                roi_crop = frame_resized[ry1:ry2, rx1:rx2]
-                # Instead of stretching the ROI crop, display it at its natural size
-                display_img = roi_crop
-            else:
-                display_img = frame_resized
-            video_rgb = cv2.cvtColor(display_img, cv2.COLOR_BGR2RGB)
-            self.update_image(self.raw_label, video_rgb, (display_img.shape[1], display_img.shape[0]))
+                x1, y1, x2, y2 = self.roi
+                cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                
+                # Draw green crosshair at center of ROI
+                center_x = (x1 + x2) // 2
+                center_y = (y1 + y2) // 2
+                cross_size = 15
+                cross_color = (0, 255, 0)  # Green
+                cv2.line(display_frame, (center_x - cross_size, center_y), (center_x + cross_size, center_y), cross_color, 2)
+                cv2.line(display_frame, (center_x, center_y - cross_size), (center_x, center_y + cross_size), cross_color, 2)
+            
+            # Convert to RGB for display
+            video_rgb = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
+            
+            # Use fixed dimensions for display
+            self.update_image(self.raw_label, video_rgb, (self.video_width, self.video_height))
         else:
             blank = 255 * np.ones((self.video_height, self.video_width, 3), dtype="uint8")
             self.update_image(self.raw_label, blank, (self.video_width, self.video_height))
+        
         self.after(self.delay, self.update_raw_feed)
 
     def update_image(self, label, cv_img, size):
         if cv_img.size == 0:
             cv_img = 255 * np.ones((size[1], size[0], 3), dtype="uint8")
-        img = Image.fromarray(cv_img).resize(size, Image.LANCZOS)
+        # Maintain aspect ratio when resizing
+        h, w = cv_img.shape[:2]
+        target_w, target_h = size
+        
+        # Calculate scaling to fit within the target size while preserving aspect ratio
+        scale = min(target_w / w, target_h / h)
+        new_w, new_h = int(w * scale), int(h * scale)
+        
+        # Resize the image to fit within the label while maintaining aspect ratio
+        img = Image.fromarray(cv_img).resize((new_w, new_h), Image.LANCZOS)
         imgtk = ImageTk.PhotoImage(image=img)
         label.imgtk = imgtk
         label.configure(image=imgtk)
 
     def start_training(self):
-        if self.training_thread and self.training_thread.is_alive():
+        # Use model weights from json
+        model_weights = self.model_var.get()
+        data_config = self.data_config_var.get().strip()
+        img_size = self.img_size_var.get().strip()
+        batch = self.batch_var.get().strip()
+        epochs = self.epochs_var.get().strip()
+        project = self.project_var.get().strip()
+        
+        if not data_config or not os.path.exists(data_config):
+            messagebox.showerror("Input Error", "Please select a valid data config file.")
             return
-        self.training_thread = threading.Thread(target=self.training_capture_loop, daemon=True)
-        self.training_thread.start()
+        
+        command = ["python", TRAIN_SCRIPT,
+                "--img", img_size,
+                "--batch", batch,
+                "--epochs", epochs,
+                "--data", data_config,
+                "--weights", model_weights,
+                "--project", project]
+        
+        self.output_text.insert(tk.END, f"Executing command:\n{' '.join(command)}\n\n")
+        self.output_text.see(tk.END)
+        
+        try:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in process.stdout:
+                self.output_text.insert(tk.END, line)
+                self.output_text.see(tk.END)
+                self.update()
+            process.wait()
+            self.output_text.insert(tk.END, "\nTraining process completed.\n")
+            # After training, update the metrics from the last run.
+            self.update_last_metrics()
+        except Exception as e:
+            messagebox.showerror("Execution Error", f"An error occurred:\n{e}")
 
     def training_capture_loop(self):
         print("Starting training capture loop...")

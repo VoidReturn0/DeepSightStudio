@@ -1,18 +1,23 @@
+import os
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 from tkinter import font as tkFont
 from PIL import Image, ImageTk, ImageDraw
 import cv2
 import numpy as np
-import os
 import yaml
 import shutil
 import json
 import torch  # For YOLOv5
 import warnings
+import threading
+
 warnings.filterwarnings("ignore", category=FutureWarning)  # Suppress AMP deprecation warning temporarily
 
-def load_labeling_settings(config_file="maintenance.json"):
+# Determine the project root directory (where this script is located)
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def load_labeling_settings(config_file=os.path.join(PROJECT_ROOT, "maintenance.json")):
     try:
         with open(config_file, "r") as f:
             data = json.load(f)
@@ -22,59 +27,47 @@ def load_labeling_settings(config_file="maintenance.json"):
         return {}, {}
 
 def update_yaml_file(new_label, yaml_path="data.yaml"):
+    """Update YAML file with new label and return label index.
+    Creates the file if it doesn't exist.
+    """
+    # Default data structure with relative paths
     data = {
-        "train": os.path.join(r"C:/Users/michaelg/Anaconda_envs/Deepsight Studio/yolo_training_data", "images"),
-        "val": os.path.join(r"C:/Users/michaelg/Anaconda_envs/Deepsight Studio/yolo_training_data", "images"),
+        "train": "yolo_training_data/images",
+        "val": "yolo_training_data/images", 
         "nc": 0,
         "names": []
     }
+    
+    # Load existing YAML file if it exists
     if os.path.exists(yaml_path):
-        with open(yaml_path, "r") as f:
-            try:
-                data = yaml.safe_load(f) or data
-            except Exception:
-                pass
-    if new_label not in data.get("names", []):
-        data.setdefault("names", []).append(new_label)
+        try:
+            with open(yaml_path, "r") as f:
+                loaded_data = yaml.safe_load(f)
+                if loaded_data:  # Check if data was actually loaded
+                    data = loaded_data
+        except Exception as e:
+            print(f"Error loading YAML file: {e}")
+    
+    # Ensure names list exists
+    if "names" not in data:
+        data["names"] = []
+    
+    # Add new label if it doesn't exist
+    if new_label not in data["names"]:
+        data["names"].append(new_label)
+        # Update number of classes
         data["nc"] = len(data["names"])
-        with open(yaml_path, "w") as f:
-            yaml.dump(data, f)
+        
+        # Write updated data back to file
+        try:
+            with open(yaml_path, "w") as f:
+                yaml.dump(data, f, default_flow_style=False)
+            print(f"Updated YAML file with label: {new_label}")
+        except Exception as e:
+            print(f"Error writing YAML file: {e}")
+    
+    # Return index of the label
     return data["names"].index(new_label)
-
-def compute_yolo_bbox(self, img, th1, th2, min_area=1000):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, th1, th2)
-    kernel = np.ones((3, 3), np.uint8)
-    edges_closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-    nonzero = cv2.findNonZero(edges_closed)
-    if nonzero is None or cv2.boundingRect(nonzero)[2] * cv2.boundingRect(nonzero)[3] < min_area:
-        return None
-    x, y, w, h = cv2.boundingRect(nonzero)
-    h_img, w_img = img.shape[:2]
-    if w >= w_img * 0.95 and h >= h_img * 0.95:
-        return None
-    # Add padding using the slider value
-    return self.compute_padded_bbox(img, x, y, x + w, y + h, padding_factor=self.padding_factor)
-
-def compute_padded_bbox(self, img, x1, y1, x2, y2, padding_factor):
-    """Add padding to a bounding box while ensuring it stays within image bounds."""
-    h_img, w_img = img.shape[:2]
-    # Compute padding in pixels
-    w = x2 - x1
-    h = y2 - y1
-    pad_w = int(w * padding_factor)
-    pad_h = int(h * padding_factor)
-    # Apply padding
-    x1 = max(0, x1 - pad_w)
-    y1 = max(0, y1 - pad_h)
-    x2 = min(w_img, x2 + pad_w)
-    y2 = min(h_img, y2 + pad_h)
-    # Convert to YOLO format (normalized center coordinates and width/height)
-    x_center_norm = (x1 + x2) / 2 / w_img
-    y_center_norm = (y1 + y2) / 2 / h_img
-    w_norm = (x2 - x1) / w_img
-    h_norm = (y2 - y1) / h_img
-    return x_center_norm, y_center_norm, w_norm, h_norm
 
 class ImageLabelingApp(tk.Tk):
     def __init__(self):
@@ -113,8 +106,12 @@ class ImageLabelingApp(tk.Tk):
         self.padding_factor = tk.DoubleVar(value=0.1)  # Default padding factor of 10%
         self.model = None  # Will store the loaded YOLO model
         
+        # This will hold gallery results (each item: dict with keys "path", "thumbnail", "bbox")
+        self.gallery_results = []
+        
         self.create_widgets()
-        self.load_yolo_model(self.custom_weights_path)  # Load default model on startup
+        # Preload the YOLO model in the background.
+        threading.Thread(target=self.preload_yolo, daemon=True).start()
         
     def create_widgets(self):
         top_frame = tk.Frame(self, bg="gray")
@@ -126,7 +123,12 @@ class ImageLabelingApp(tk.Tk):
         tk.Entry(top_frame, textvariable=self.label_var, width=10, font=self.custom_font).pack(side=tk.LEFT, padx=5)
         tk.Button(top_frame, text="Delete Picture", command=self.delete_picture, font=self.custom_font).pack(side=tk.LEFT, padx=5)
         tk.Button(top_frame, text="Auto Label Folder", command=self.auto_label_folder, font=self.custom_font).pack(side=tk.LEFT, padx=5)
-        tk.Button(top_frame, text="Auto Label with YOLO", command=self.auto_label_with_yolo, font=self.custom_font).pack(side=tk.LEFT, padx=5)
+        
+        # Auto Label with YOLO button is initially disabled until the model is preloaded.
+        self.auto_label_button = tk.Button(top_frame, text="Auto Label with YOLO",
+                                             command=self.auto_label_with_yolo,
+                                             font=self.custom_font, state="disabled")
+        self.auto_label_button.pack(side=tk.LEFT, padx=5)
         
         canny_frame = tk.Frame(self, bg="gray")
         canny_frame.pack(side=tk.TOP, pady=5)
@@ -142,11 +144,10 @@ class ImageLabelingApp(tk.Tk):
         self.canny_th2.pack(side=tk.LEFT, padx=5)
         tk.Button(canny_frame, text="Analyze ROI (Edge Detect)", command=self.analyze_roi, font=self.custom_font).pack(side=tk.LEFT, padx=5)
         
-        # Add padding slider frame
         padding_frame = tk.Frame(self, bg="gray")
         padding_frame.pack(side=tk.TOP, pady=5)
         tk.Label(padding_frame, text="YOLO Padding Factor (%):", bg="gray", fg="white", font=self.custom_font).pack(side=tk.LEFT, padx=5)
-        self.padding_slider = tk.Scale(padding_frame, from_=0.0, to=0.5, orient=tk.HORIZONTAL, resolution=0.01, 
+        self.padding_slider = tk.Scale(padding_frame, from_=0.0, to=0.5, orient=tk.HORIZONTAL, resolution=0.01,
                                        variable=self.padding_factor, font=self.custom_font)
         self.padding_slider.pack(side=tk.LEFT, padx=5)
         tk.Label(padding_frame, text="Adjust padding for YOLO bounding boxes", bg="gray", fg="white", font=self.custom_font).pack(side=tk.LEFT, padx=5)
@@ -171,10 +172,34 @@ class ImageLabelingApp(tk.Tk):
         self.canvas.bind("<Button-4>", self.on_mouse_wheel)
         self.canvas.bind("<Button-5>", self.on_mouse_wheel)
         
+        tk.Button(self, text="Preview Gallery", command=lambda: self.show_gallery(gallery_only=True, title="Gallery"),
+                  font=self.custom_font).pack(side=tk.BOTTOM, pady=5)
+        
+    def preload_yolo(self):
+        try:
+            # Use model weights from settings
+            self.custom_weights_path = self.training_settings.get("model_weights", "yolov5s.pt")
+            
+            if self.model_type == "YOLOv5":
+                self.model = torch.hub.load('ultralytics/yolov5', 'custom',
+                                        path=self.custom_weights_path,
+                                        force_reload=False)  # Prevent redownloading
+            elif self.model_type == "YOLOv8":
+                from ultralytics import YOLO
+                self.model = YOLO(self.custom_weights_path)
+                
+            self.after(0, lambda: self.auto_label_button.config(state="normal"))
+        except Exception as e:
+            self.after(0, lambda: self.auto_label_button.config(state="normal"))
+            messagebox.showerror("Error", f"Failed to preload YOLO model: {e}")
+            print(f"Error preloading model: {e}")
+    
     def load_yolo_model(self, weights_path):
         try:
             if self.model_type == "YOLOv5":
-                self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=weights_path, force_reload=True)
+                self.model = torch.hub.load('ultralytics/yolov5', 'custom',
+                                             path=weights_path,
+                                             force_reload=True)
             elif self.model_type == "YOLOv8":
                 from ultralytics import YOLO
                 self.model = YOLO(weights_path)
@@ -185,7 +210,15 @@ class ImageLabelingApp(tk.Tk):
             self.model = None
 
     def select_folder(self):
-        folder = filedialog.askdirectory(title="Select Folder with Images")
+        # Default to training_data folder
+        default_folder = os.path.join(PROJECT_ROOT, "training_data")
+        # Create it if it doesn't exist
+        os.makedirs(default_folder, exist_ok=True)
+        
+        folder = filedialog.askdirectory(
+            title="Select Folder with Images",
+            initialdir=default_folder  # Set default directory
+        )
         if folder:
             self.image_folder = folder
             self.image_paths = [os.path.join(folder, f) for f in os.listdir(folder)
@@ -373,25 +406,27 @@ class ImageLabelingApp(tk.Tk):
         y_center_norm = (y + h / 2) / crop_h
         w_norm = w / crop_w
         h_norm = h / crop_h
-        save_folder = r"C:/Users/michaelg/Anaconda_envs/Deepsight Studio/yolo_training_data"
+        save_folder = os.path.join(PROJECT_ROOT, "yolo_training_data")
         images_dir = os.path.join(save_folder, "images")
         labels_dir = os.path.join(save_folder, "labels")
         os.makedirs(images_dir, exist_ok=True)
         os.makedirs(labels_dir, exist_ok=True)
         dest_img_path = os.path.join(images_dir, base_name)
-        cv2.imwrite(dest_img_path, crop_img)
-        label_idx = update_yaml_file(self.label_var.get().strip(), yaml_path=os.path.join(save_folder, "data.yaml"))
+        if not os.path.exists(dest_img_path):
+            cv2.imwrite(dest_img_path, crop_img)
+        label_idx = update_yaml_file(self.label_var.get().strip(), yaml_path=os.path.join(PROJECT_ROOT, "data.yaml"))
         base_filename, _ = os.path.splitext(base_name)
         dest_txt_path = os.path.join(labels_dir, base_filename + ".txt")
-        with open(dest_txt_path, "w") as f:
-            f.write(f"{label_idx} {x_center_norm:.6f} {y_center_norm:.6f} {w_norm:.6f} {h_norm:.6f}\n")
+        if not os.path.exists(dest_txt_path):
+            with open(dest_txt_path, "w") as f:
+                f.write(f"{label_idx} {x_center_norm:.6f} {y_center_norm:.6f} {w_norm:.6f} {h_norm:.6f}\n")
         messagebox.showinfo("Saved", f"Training data saved.\nImage: {dest_img_path}\nAnnotation: {dest_txt_path}")
-
+        
     def auto_label_folder(self):
         if not self.image_paths:
             messagebox.showwarning("Warning", "No images in the folder.")
             return
-        results = []
+        self.gallery_results = []
         for path in self.image_paths:
             img = cv2.imread(path)
             if img is None:
@@ -411,284 +446,188 @@ class ImageLabelingApp(tk.Tk):
             thumb = cv2.resize(overlay, (200, int(overlay.shape[0] * ratio)))
             thumb_rgb = cv2.cvtColor(thumb, cv2.COLOR_BGR2RGB)
             thumb_pil = Image.fromarray(thumb_rgb)
-            results.append({"path": path, "thumbnail": thumb_pil})
-        self.show_gallery(results, "Auto Label Report (Canny)")
-
+            self.gallery_results.append({"path": path, "thumbnail": thumb_pil, "bbox": None})
+        self.show_gallery(gallery_only=True, title="Auto Label Report (Canny)")
+        
     def auto_label_with_yolo(self):
         if not self.image_paths:
             messagebox.showwarning("Warning", "No images in the folder.")
             return
-        weights_path = filedialog.askopenfilename(
-            title=f"Select Custom YOLO Weights (Default: {self.custom_weights_path})",
-            filetypes=[("PyTorch weights", "*.pt"), ("All files", "*.*")],
-            initialdir=os.getcwd(),
-            initialfile=self.custom_weights_path if os.path.isfile(self.custom_weights_path) else None
-        )
-        if weights_path:
-            self.custom_weights_path = weights_path
-            self.load_yolo_model(weights_path)
+        
+        # Use the weights from maintenance.json by default
+        self.custom_weights_path = self.training_settings.get("model_weights", "yolov5s.pt")
+        
+        # Only ask for weights if default can't be found
+        if not os.path.exists(self.custom_weights_path):
+            weights_path = filedialog.askopenfilename(
+                title=f"Select Custom YOLO Weights (Default not found: {self.custom_weights_path})",
+                filetypes=[("PyTorch weights", "*.pt"), ("All files", "*.*")],
+                initialdir=os.getcwd()
+            )
+            if weights_path:
+                self.custom_weights_path = weights_path
+        
+        # Don't force reload to avoid downloading weights again
         if self.model is None:
-            messagebox.showwarning("Warning", "No valid YOLO model loaded. Using default or last loaded model.")
-            self.load_yolo_model(self.training_settings.get("model_weights", "yolov5s.pt"))
-            if self.model is None:
+            try:
+                if self.model_type == "YOLOv5":
+                    self.model = torch.hub.load('ultralytics/yolov5', 'custom',
+                                            path=self.custom_weights_path,
+                                            force_reload=False)  # Don't force reload
+                elif self.model_type == "YOLOv8":
+                    from ultralytics import YOLO
+                    self.model = YOLO(self.custom_weights_path)
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to load YOLO model: {e}")
                 return
 
-        results = []
-        for path in self.image_paths:
-            img = cv2.imread(path)
-            if img is None:
-                continue
-            if self.model_type == "YOLOv5":
-                predictions = self.model(path)
-                overlay = img.copy()
-                bbox_found = False
-                if len(predictions.xyxy[0]) > 0:  # Check if there are detections
-                    box = predictions.xyxy[0][0]  # Take the first detection
-                    x1, y1, x2, y2 = map(int, box[:4])
-                    if (x2 - x1) * (y2 - y1) < self.min_bbox_area_slider.get():
-                        continue
-                    # Use the padding factor from the slider
-                    x_center_norm, y_center_norm, w_norm, h_norm = self.compute_padded_bbox(img, x1, y1, x2, y2, self.padding_factor.get())
-                    # Draw the padded box for visualization
-                    x1_padded = int((x_center_norm - w_norm / 2) * img.shape[1])
-                    y1_padded = int((y_center_norm - h_norm / 2) * img.shape[0])
-                    x2_padded = int((x_center_norm + w_norm / 2) * img.shape[1])
-                    y2_padded = int((y_center_norm + h_norm / 2) * img.shape[0])
-                    cv2.rectangle(overlay, (x1_padded, y1_padded), (x2_padded, y2_padded), (0, 255, 255), 2)
-                    bbox_found = True
-            elif self.model_type == "YOLO8":  # Note: Should be "YOLOv8" to match your JSON and GUI
-                predictions = self.model.predict(path, conf=0.25)
-                overlay = img.copy()
-                bbox_found = False
-                for result in predictions:
-                    if result.boxes:
-                        box = result.boxes[0]
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        self.auto_label_button.config(state="disabled")
+        
+        loading_window = tk.Toplevel(self)
+        loading_window.title("Loading Data")
+        tk.Label(loading_window, text="Data is being analyzed...").pack(pady=10)
+        progress = ttk.Progressbar(loading_window, mode="indeterminate")
+        progress.pack(padx=20, pady=20, fill="x")
+        progress.start()
+        
+        def run_analysis():
+            gallery_results = []
+            for path in self.image_paths:
+                img = cv2.imread(path)
+                if img is None:
+                    continue
+                if self.model_type == "YOLOv5":
+                    predictions = self.model(path)
+                    overlay = img.copy()
+                    if len(predictions.xyxy[0]) > 0:
+                        box = predictions.xyxy[0][0]
+                        x1, y1, x2, y2 = map(int, box[:4])
                         if (x2 - x1) * (y2 - y1) < self.min_bbox_area_slider.get():
                             continue
-                        # Use the padding factor from the slider
-                        x_center_norm, y_center_norm, w_norm, h_norm = self.compute_padded_bbox(img, x1, y1, x2, y2, self.padding_factor.get())
-                        # Draw the padded box for visualization
-                        x1_padded = int((x_center_norm - w_norm / 2) * img.shape[1])
-                        y1_padded = int((y_center_norm - h_norm / 2) * img.shape[0])
-                        x2_padded = int((x_center_norm + w_norm / 2) * img.shape[1])
-                        y2_padded = int((y_center_norm + h_norm / 2) * img.shape[0])
-                        cv2.rectangle(overlay, (x1_padded, y1_padded), (x2_padded, y2_padded), (0, 255, 255), 2)
-                        bbox_found = True
-                        break
-            if not bbox_found:
-                continue
-            ratio = 200 / overlay.shape[1]
-            thumb = cv2.resize(overlay, (200, int(overlay.shape[0] * ratio)))
-            thumb_rgb = cv2.cvtColor(thumb, cv2.COLOR_BGR2RGB)
-            thumb_pil = Image.fromarray(thumb_rgb)
-            results.append({"path": path, "thumbnail": thumb_pil})
-        self.show_gallery(results, f"Auto Label Report ({self.model_type})")
-
-    def show_gallery(self, results, title):
-        if not results:
-            messagebox.showinfo(title, "No images with sufficient detection were found.")
-            return
-        gallery_win = tk.Toplevel(self)
-        gallery_win.title(title)
-        close_btn = tk.Button(gallery_win, text="X", font=self.custom_font_large, fg="white", bg="red",
-                              command=gallery_win.destroy)
-        close_btn.pack(side=tk.TOP, anchor="ne", padx=10, pady=10)
-        gallery_win.attributes("-fullscreen", True)
+                        bbox = self.compute_padded_bbox(img, x1, y1, x2, y2, self.padding_factor.get())
+                        cv2.rectangle(overlay, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.putText(overlay, self.label_var.get(), (x1, y1-10),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                        gallery_results.append({
+                            "path": path,
+                            "thumbnail": Image.fromarray(cv2.cvtColor(overlay, cv2.COLOR_BGR2RGB)),
+                            "bbox": bbox
+                        })
+            self.gallery_results = gallery_results
+            self.after(0, lambda: self.finish_yolo_analysis(loading_window))
         
-        gallery_canvas = tk.Canvas(gallery_win)
-        gallery_canvas.pack(side="left", fill="both", expand=True)
-        v_scrollbar = tk.Scrollbar(gallery_win, orient="vertical", command=gallery_canvas.yview)
-        v_scrollbar.pack(side="right", fill="y")
-        gallery_canvas.configure(yscrollcommand=v_scrollbar.set)
+        threading.Thread(target=run_analysis, daemon=True).start()
         
-        def _on_mousewheel(event):
-            gallery_canvas.yview_scroll(-int(event.delta/120), "units")
-        gallery_canvas.bind("<MouseWheel>", _on_mousewheel)
-        gallery_canvas.bind("<Button-4>", lambda e: gallery_canvas.yview_scroll(-1, "units"))
-        gallery_canvas.bind("<Button-5>", lambda e: gallery_canvas.yview_scroll(1, "units"))
+    def finish_yolo_analysis(self, loading_window):
+        loading_window.destroy()
+        self.auto_label_button.config(state="normal")
+        self.show_gallery(gallery_only=True, title="Auto Label Report (YOLO)")
         
-        scrollable_frame = tk.Frame(gallery_canvas)
-        gallery_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        scrollable_frame.bind("<Configure>", lambda e: gallery_canvas.configure(scrollregion=gallery_canvas.bbox("all")))
+    def compute_padded_bbox(self, img, x1, y1, x2, y2, padding_factor):
+        h_img, w_img = img.shape[:2]
+        w = x2 - x1
+        h = y2 - y1
+        pad_w = int(w * padding_factor)
+        pad_h = int(h * padding_factor)
+        x1 = max(0, x1 - pad_w)
+        y1 = max(0, y1 - pad_h)
+        x2 = min(w_img, x2 + pad_w)
+        y2 = min(h_img, y2 + pad_h)
+        x_center_norm = (x1 + x2) / 2 / w_img
+        y_center_norm = (y1 + y2) / 2 / h_img
+        w_norm = (x2 - x1) / w_img
+        h_norm = (y2 - y1) / h_img
+        return x_center_norm, y_center_norm, w_norm, h_norm
         
-        selected_vars = []
-        for idx, item in enumerate(results):
-            var = tk.BooleanVar(value=True)
-            selected_vars.append(var)
-            frame = tk.Frame(scrollable_frame, bd=2, relief=tk.RIDGE)
-            frame.grid(row=idx // 4, column=idx % 4, padx=5, pady=5)
-            thumb_photo = ImageTk.PhotoImage(item["thumbnail"])
-            lbl = tk.Label(frame, image=thumb_photo)
-            lbl.image = thumb_photo
-            lbl.bind("<Button-1>", lambda e, p=item["path"]: self.open_image_in_zoom(p))
+    def show_gallery(self, gallery_only=False, title="Gallery"):
+        gallery_window = tk.Toplevel(self)
+        gallery_window.title(title)
+        gallery_window.geometry("800x600")
+        container = ttk.Frame(gallery_window)
+        container.pack(fill="both", expand=True)
+        canvas = tk.Canvas(container)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        self.gallery_vars = []
+        for idx, item in enumerate(self.gallery_results):
+            frame = ttk.Frame(scrollable_frame, relief="ridge", borderwidth=2)
+            frame.grid(row=idx // 3, column=idx % 3, padx=5, pady=5)
+            thumb = item["thumbnail"].resize((200, 200))
+            photo = ImageTk.PhotoImage(thumb)
+            lbl = ttk.Label(frame, image=photo)
+            lbl.image = photo
             lbl.pack()
-            cb = tk.Checkbutton(frame, text=os.path.basename(item["path"]), variable=var, font=self.custom_font)
-            cb.pack()
+            var = tk.BooleanVar(value=True)
+            chk = ttk.Checkbutton(frame, text="Save", variable=var)
+            chk.pack()
+            self.gallery_vars.append((var, item))
         
-        def process_selection():
-            total_selected = sum(1 for var in selected_vars if var.get())
-            if total_selected == 0:
-                messagebox.showinfo(title, "No images selected for saving.")
-                gallery_win.destroy()
-                return
-            
-            progress_win = tk.Toplevel(gallery_win)
-            progress_win.title("Processing Images")
-            progress_win.geometry("300x100")
-            progress_win.transient(gallery_win)
-            progress_win.grab_set()
-            tk.Label(progress_win, text="Processing images, please wait...").pack(pady=5)
-            progress_bar = ttk.Progressbar(progress_win, maximum=total_selected, mode='determinate')
-            progress_bar.pack(pady=5, padx=10, fill="x")
-            
-            saved = 0
-            skipped = 0
-            warnings_list = []
-            base_dir = r"C:/Users/michaelg/Anaconda_envs/Deepsight Studio/yolo_training_data"
-            images_dir = os.path.join(base_dir, "images")
-            labels_dir = os.path.join(base_dir, "labels")
-            os.makedirs(images_dir, exist_ok=True)
-            os.makedirs(labels_dir, exist_ok=True)
-            label_idx = update_yaml_file(self.label_var.get().strip(), yaml_path=os.path.join(base_dir, "data.yaml"))
-            method = "YOLO" if self.custom_weights_path else "Canny"
-            
-            for idx, item in enumerate(results):
-                if not selected_vars[idx].get():
-                    skipped += 1
-                    continue
-                src_path = item["path"]
-                base_name = os.path.basename(src_path)
+        save_btn = ttk.Button(gallery_window, text="Save Selected",
+                              command=lambda: self.save_selected_from_gallery(gallery_window))
+        save_btn.pack(pady=10)
+        
+    def save_selected_from_gallery(self, gallery_window):
+        save_folder = os.path.join(PROJECT_ROOT, "yolo_training_data")
+        images_dir = os.path.join(save_folder, "images")
+        labels_dir = os.path.join(save_folder, "labels")
+        os.makedirs(images_dir, exist_ok=True)
+        os.makedirs(labels_dir, exist_ok=True)
+        
+        # Make sure the data.yaml file exists
+        yaml_path = os.path.join(PROJECT_ROOT, "data.yaml")
+        
+        saved = 0
+        for var, item in self.gallery_vars:
+            if var.get():
+                path = item["path"]
+                base_name = os.path.basename(path)
                 dest_img_path = os.path.join(images_dir, base_name)
-                shutil.copy(src_path, dest_img_path)
-                img = cv2.imread(src_path)
-                bbox = None
-                if method == "Canny":
-                    bbox = compute_yolo_bbox(self, img, self.canny_th1.get(), self.canny_th2.get(), 
-                                             min_area=self.min_bbox_area_slider.get())
-                else:  # YOLO with padding from slider
-                    if self.model_type == "YOLOv5":
-                        predictions = self.model(src_path)
-                        if len(predictions.xyxy[0]) > 0:
-                            box = predictions.xyxy[0][0]
-                            x1, y1, x2, y2 = map(int, box[:4])
-                            area = (x2 - x1) * (y2 - y1)
-                            if area >= self.min_bbox_area_slider.get():
-                                bbox = self.compute_padded_bbox(img, x1, y1, x2, y2, self.padding_factor.get())
-                    elif self.model_type == "YOLOv8":
-                        predictions = self.model.predict(src_path, conf=0.25)
-                        for result in predictions:
-                            if result.boxes:
-                                box = result.boxes[0]
-                                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                                area = (x2 - x1) * (y2 - y1)
-                                if area >= self.min_bbox_area_slider.get():
-                                    bbox = self.compute_padded_bbox(img, x1, y1, x2, y2, self.padding_factor.get())
-                                break
-                if bbox is None:
-                    warnings_list.append(f"Could not compute a valid bounding box for {base_name}.")
-                    skipped += 1
+                if not os.path.exists(dest_img_path):
+                    shutil.copy2(path, dest_img_path)
+                
+                # Determine bounding box
+                if item["bbox"]:
+                    x_center_norm, y_center_norm, w_norm, h_norm = item["bbox"]
                 else:
-                    x_center_norm, y_center_norm, w_norm, h_norm = bbox
-                    base_filename, _ = os.path.splitext(base_name)
-                    dest_txt_path = os.path.join(labels_dir, base_filename + ".txt")
+                    img = cv2.imread(path)
+                    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    th1 = self.canny_th1.get()
+                    th2 = self.canny_th2.get()
+                    edges = cv2.Canny(gray, th1, th2)
+                    nonzero = cv2.findNonZero(edges)
+                    if nonzero is None:
+                        continue
+                    x, y, w, h = cv2.boundingRect(nonzero)
+                    h_img, w_img = img.shape[:2]
+                    x_center_norm = (x + w/2) / w_img
+                    y_center_norm = (y + h/2) / h_img
+                    w_norm = w / w_img
+                    h_norm = h / h_img
+                
+                # Update YAML and get label index - ensure this runs for each saved image
+                label_idx = update_yaml_file(self.label_var.get().strip(), 
+                                            yaml_path=yaml_path)
+                
+                # Save annotation
+                base_filename, _ = os.path.splitext(base_name)
+                dest_txt_path = os.path.join(labels_dir, base_filename + ".txt")
+                if not os.path.exists(dest_txt_path):
                     with open(dest_txt_path, "w") as f:
                         f.write(f"{label_idx} {x_center_norm:.6f} {y_center_norm:.6f} {w_norm:.6f} {h_norm:.6f}\n")
-                    saved += 1
-                progress_bar['value'] = saved + skipped
-                progress_win.update()
-            progress_win.destroy()
-            report = f"Auto Labeling Complete ({method})\nSaved: {saved} images\nSkipped: {skipped} images"
-            if warnings_list:
-                report += "\nWarnings:\n" + "\n".join(warnings_list)
-            messagebox.showinfo(title, report)
-            gallery_win.destroy()
+                saved += 1
         
-        btn = tk.Button(scrollable_frame, text="Save Selected", command=process_selection, font=self.custom_font)
-        btn.grid(row=(len(results) // 4) + 1, column=0, columnspan=4, pady=10)
-
-    def open_image_in_zoom(self, image_path):
-        zoom_win = tk.Toplevel(self)
-        zoom_win.title("Image Preview")
-        canvas = tk.Canvas(zoom_win, bg="black")
-        canvas.pack(fill="both", expand=True)
-        image = cv2.imread(image_path)
-        if image is None:
-            messagebox.showerror("Error", f"Failed to load image: {image_path}")
-            return
-        method = "YOLO" if self.custom_weights_path else "Canny"
-        if method == "Canny":
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            edges = cv2.Canny(gray, self.canny_th1.get(), self.canny_th2.get())
-            contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            if contours:
-                largest = max(contours, key=cv2.contourArea)
-                if cv2.contourArea(largest) > 100:
-                    overlay = image.copy()
-                    hull = cv2.convexHull(largest)
-                    cv2.drawContours(overlay, [hull], -1, (0, 255, 255), 2)
-                    image = overlay
-        else:
-            if self.model_type == "YOLOv5":
-                predictions = self.model(image_path)
-                overlay = image.copy()
-                if len(predictions.xyxy[0]) > 0:
-                    box = predictions.xyxy[0][0]
-                    x1, y1, x2, y2 = map(int, box[:4])
-                    x_center_norm, y_center_norm, w_norm, h_norm = self.compute_padded_bbox(image, x1, y1, x2, y2, self.padding_factor.get())
-                    x1_padded = int((x_center_norm - w_norm / 2) * image.shape[1])
-                    y1_padded = int((y_center_norm - h_norm / 2) * image.shape[0])
-                    x2_padded = int((x_center_norm + w_norm / 2) * image.shape[1])
-                    y2_padded = int((y_center_norm + h_norm / 2) * image.shape[0])
-                    cv2.rectangle(overlay, (x1_padded, y1_padded), (x2_padded, y2_padded), (0, 255, 255), 2)
-                    image = overlay
-            elif self.model_type == "YOLOv8":
-                predictions = self.model.predict(image_path, conf=0.25)
-                overlay = image.copy()
-                for result in predictions:
-                    if result.boxes:
-                        box = result.boxes[0]
-                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        x_center_norm, y_center_norm, w_norm, h_norm = self.compute_padded_bbox(image, x1, y1, x2, y2, self.padding_factor.get())
-                        x1_padded = int((x_center_norm - w_norm / 2) * image.shape[1])
-                        y1_padded = int((y_center_norm - h_norm / 2) * image.shape[0])
-                        x2_padded = int((x_center_norm + w_norm / 2) * image.shape[1])
-                        y2_padded = int((y_center_norm + h_norm / 2) * image.shape[0])
-                        cv2.rectangle(overlay, (x1_padded, y1_padded), (x2_padded, y2_padded), (0, 255, 255), 2)
-                        image = overlay
-                        break
-
-        zoom_factor = 1.0
-
-        def update_display():
-            nonlocal zoom_factor
-            h, w = image.shape[:2]
-            new_w = int(w * zoom_factor)
-            new_h = int(h * zoom_factor)
-            resized = cv2.resize(image, (new_w, new_h))
-            image_rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-            photo = ImageTk.PhotoImage(Image.fromarray(image_rgb))
-            canvas.delete("all")
-            canvas.create_image(canvas.winfo_width() // 2, canvas.winfo_height() // 2, image=photo, anchor="center")
-            canvas.image = photo
-
-        def on_mouse_wheel(event):
-            nonlocal zoom_factor
-            if hasattr(event, "delta"):
-                zoom_factor *= 1.1 if event.delta > 0 else 0.9
-            else:
-                zoom_factor *= 1.1 if event.num == 4 else 0.9
-            update_display()
-
-        canvas.bind("<MouseWheel>", on_mouse_wheel)
-        canvas.bind("<Button-4>", on_mouse_wheel)
-        canvas.bind("<Button-5>", on_mouse_wheel)
-        update_display()
-        canvas.bind("<Configure>", lambda e: update_display())
-
-    def run(self):
-        self.mainloop()
+        messagebox.showinfo("Saved", f"Saved {saved} images and annotations.\nYAML file updated at {yaml_path}")
+        gallery_window.destroy()
 
 if __name__ == "__main__":
     app = ImageLabelingApp()
-    app.run()
+    app.mainloop()

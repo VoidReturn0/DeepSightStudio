@@ -182,7 +182,6 @@ class VisionSettingsWindow(tk.Toplevel):
         common_res = ["640x480", "800x600", "1024x768", "1280x720", "1280x800", "1366x768", "1920x1080"]
         self.resolution_combo = ttk.Combobox(frame_res, textvariable=self.resolution_var, values=common_res, state="readonly", width=12)
         self.resolution_combo.pack(side="left", padx=10)
-        # Pre-populate resolution if exists in json.
         if self.default_resolution in common_res:
             self.resolution_combo.set(self.default_resolution)
         else:
@@ -264,7 +263,6 @@ class LabelingSettingsWindow(tk.Toplevel):
         header = tk.Label(self, text="Labeling Settings", font=("Helvetica", 16, "bold"),
                           bg="#1e1e1e", fg="white")
         header.pack(pady=10)
-        # Canny Threshold 1: min, max, and actual value.
         frame_thresh1 = tk.Frame(self, bg="#1e1e1e")
         frame_thresh1.pack(pady=5, fill="x", padx=10)
         tk.Label(frame_thresh1, text="Canny 1 Min:", bg="#1e1e1e", fg="white", font=("Helvetica", 12)).pack(side="left")
@@ -278,14 +276,12 @@ class LabelingSettingsWindow(tk.Toplevel):
         tk.Label(frame_thresh1_val, text="Canny 1 Value:", bg="#1e1e1e", fg="white", font=("Helvetica", 12)).pack(side="left")
         self.thresh1_val = tk.Entry(frame_thresh1_val, width=10, font=("Helvetica", 12))
         self.thresh1_val.pack(side="left", padx=5)
-        # Set defaults from json if available.
         self.thresh1_min.delete(0, tk.END)
         self.thresh1_min.insert(0, self.labeling_settings.get("canny_threshold1", {}).get("min", 0))
         self.thresh1_max.delete(0, tk.END)
         self.thresh1_max.insert(0, self.labeling_settings.get("canny_threshold1", {}).get("max", 300))
         self.thresh1_val.delete(0, tk.END)
         self.thresh1_val.insert(0, self.labeling_settings.get("canny_threshold1", {}).get("value", 100))
-        # Canny Threshold 2: min, max, and actual value.
         frame_thresh2 = tk.Frame(self, bg="#1e1e1e")
         frame_thresh2.pack(pady=5, fill="x", padx=10)
         tk.Label(frame_thresh2, text="Canny 2 Min:", bg="#1e1e1e", fg="white", font=("Helvetica", 12)).pack(side="left")
@@ -458,9 +454,9 @@ class TrainingSettingsWindow(tk.Toplevel):
         if default_weights in common_weights:
             self.model_weights_combo.set(default_weights)
         else:
-            # If custom, show "Custom" and store the value
             self.model_weights_combo.set("Custom")
             self.custom_weights_filepath = default_weights
+        # When "Custom" is selected, open a file dialog filtering for .pt files.
         self.model_weights_combo.bind("<<ComboboxSelected>>", self.on_model_weights_selected)
         # Data Config with Browse
         frame_data = tk.Frame(self, bg="#1e1e1e")
@@ -504,11 +500,14 @@ class TrainingSettingsWindow(tk.Toplevel):
         btn_save.pack(pady=20)
 
     def on_model_weights_selected(self, event):
+        # When "Custom" is selected, open a file dialog filtering for .pt files.
         if self.model_weights_var.get() == "Custom":
-            folder = filedialog.askdirectory(title="Select Custom Weights Folder", initialdir=os.getcwd())
-            if folder:
-                self.custom_weights_filepath = folder
-                messagebox.showinfo("Custom Weights", f"Custom weights folder set to:\n{folder}")
+            file_path = filedialog.askopenfilename(title="Select Custom Model Weights",
+                                                   filetypes=[("PyTorch Weights", "*.pt")],
+                                                   initialdir=os.getcwd())
+            if file_path:
+                self.custom_weights_filepath = file_path
+                messagebox.showinfo("Custom Weights", f"Custom weights file set to:\n{file_path}")
             else:
                 self.model_weights_combo.current(0)
 
@@ -526,18 +525,33 @@ class TrainingSettingsWindow(tk.Toplevel):
             self.project_entry.insert(0, folder_path)
 
     def save_settings(self):
+        project_root = os.path.abspath(os.path.dirname(__file__))
+        
+        # Convert the selected file paths to relative paths
+        data_config_abs = self.data_config_entry.get()
+        project_abs = self.project_entry.get()
+        data_config_rel = os.path.relpath(data_config_abs, project_root)
+        project_rel = os.path.relpath(project_abs, project_root)
+        
+        if self.model_weights_var.get() == "Custom":
+            model_weights_abs = self.custom_weights_filepath
+            model_weights_rel = os.path.relpath(model_weights_abs, project_root)
+        else:
+            model_weights_rel = self.model_weights_var.get()
+        
         settings = {
             "model_used": self.model_used_var.get() if hasattr(self, "model_used_var") else None,
-            "model_weights": self.custom_weights_filepath if self.model_weights_var.get() == "Custom" else self.model_weights_var.get(),
-            "data_config": self.data_config_entry.get(),
+            "model_weights": model_weights_rel,
+            "data_config": data_config_rel,
             "img_size": self.img_size_entry.get(),
             "batch_size": self.batch_entry.get(),
             "epochs": self.epochs_entry.get(),
-            "project_name": self.project_entry.get()
+            "project_name": project_rel
         }
         self.save_to_json(settings, "training_settings")
         messagebox.showinfo("Saved", "Training settings saved.")
         self.destroy()
+
 
     def save_to_json(self, settings, key):
         maintenance_file = "maintenance.json"
