@@ -87,7 +87,7 @@ class DeepSightStudio(tk.Tk):
             right_img = tk.Label(header_frame, image=self.ouroboros_photo, bg="#1e1e1e")
             right_img.grid(row=0, column=2, padx=10)
 
-        # Main buttons frame (vertical stack)
+            # Main buttons frame (vertical stack)
         button_frame = tk.Frame(self, bg="#1e1e1e")
         button_frame.pack(pady=20)
         btn_acquisition = tk.Button(button_frame, text="Vision Acquisition",
@@ -95,25 +95,26 @@ class DeepSightStudio(tk.Tk):
                                     command=lambda: subprocess.Popen(["python", "image_acquisition.py"], cwd=os.getcwd()))
         btn_acquisition.grid(row=0, column=0, padx=10, pady=10)
         btn_labeling = tk.Button(button_frame, text="Data Labeling",
-                                 font=self.custom_font_button, width=25,
-                                 command=lambda: subprocess.Popen(["python", "image_labeling.py"], cwd=os.getcwd()))
+                                font=self.custom_font_button, width=25,
+                                command=lambda: subprocess.Popen(["python", "image_labeling.py"], cwd=os.getcwd()))
         btn_labeling.grid(row=1, column=0, padx=10, pady=10)
         btn_hardware = tk.Button(button_frame, text="Training Hardware",
-                                 font=self.custom_font_button, width=25,
-                                 command=lambda: subprocess.Popen(["python", "training_hardware.py"], cwd=os.getcwd()))
+                                font=self.custom_font_button, width=25,
+                                command=lambda: subprocess.Popen(["python", "training_hardware.py"], cwd=os.getcwd()))
         btn_hardware.grid(row=2, column=0, padx=10, pady=10)
-        btn_training = tk.Button(button_frame, text="Training Session",
-                                 font=self.custom_font_button, width=25,
-                                 command=lambda: subprocess.Popen(["python", "training_session.py"], cwd=os.getcwd()))
-        btn_training.grid(row=3, column=0, padx=10, pady=10)
+        btn_testing = tk.Button(button_frame, text="Vision Testing",
+                                font=self.custom_font_button, width=25,
+                                command=lambda: subprocess.Popen(["python", "vision_testing.py"], cwd=os.getcwd()))
+        btn_testing.grid(row=3, column=0, padx=10, pady=10)
         btn_maintenance = tk.Button(button_frame, text="Maintenance Settings",
                                     font=self.custom_font_button, width=25,
                                     command=self.launch_maintenance_settings)
         btn_maintenance.grid(row=4, column=0, padx=10, pady=10)
         btn_exit = tk.Button(button_frame, text="Exit",
-                             font=self.custom_font_button, width=25,
-                             command=self.quit)
+                            font=self.custom_font_button, width=25,
+                            command=self.quit)
         btn_exit.grid(row=5, column=0, padx=10, pady=10)
+
 
     def launch_maintenance_settings(self):
         MaintenanceSettings(self)
