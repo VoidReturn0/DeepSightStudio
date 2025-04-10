@@ -7,7 +7,7 @@ from config_manager import ConfigManager
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    
+
     # Load configuration, which now includes screen_settings.
     config = ConfigManager(filepath="maintenance.json")
     screen_settings = config.get_setting(["screen_settings"])

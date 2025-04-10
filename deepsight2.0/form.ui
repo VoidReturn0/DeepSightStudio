@@ -2,22 +2,272 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
-  <!-- Main Window Geometry and Title -->
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>864</height>
+    <width>1349</width>
+    <height>1174</height>
    </rect>
+  </property>
+  <property name="palette">
+   <palette>
+    <active>
+     <colorrole role="WindowText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Button">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>153</red>
+        <green>153</green>
+        <blue>153</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Text">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="ButtonText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>91</red>
+        <green>91</green>
+        <blue>91</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="HighlightedText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>170</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Link">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>0</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>85</red>
+        <green>0</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="ToolTipText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </active>
+    <inactive>
+     <colorrole role="WindowText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Button">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>153</red>
+        <green>153</green>
+        <blue>153</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Text">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="ButtonText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>91</red>
+        <green>91</green>
+        <blue>91</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="HighlightedText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>170</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Link">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>0</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>85</red>
+        <green>0</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="ToolTipText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </inactive>
+    <disabled>
+     <colorrole role="Button">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>153</red>
+        <green>153</green>
+        <blue>153</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>0</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="HighlightedText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>170</red>
+        <green>0</green>
+        <blue>0</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Link">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>0</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="AlternateBase">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>85</red>
+        <green>0</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="ToolTipText">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </disabled>
+   </palette>
   </property>
   <property name="windowTitle">
    <string>DeepSight Studio 2.0</string>
   </property>
-  <!-- Central Widget -->
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
-    <!-- Title Label -->
     <item>
      <widget class="QLabel" name="titleLabel">
       <property name="font">
@@ -37,7 +287,6 @@
       </property>
      </widget>
     </item>
-    <!-- Video Frames Layout -->
     <item>
      <layout class="QHBoxLayout" name="videoLayout">
       <item>
@@ -80,36 +329,32 @@
       </item>
      </layout>
     </item>
-    <!-- Stacked Widget for Bottom Settings -->
     <item>
      <widget class="QStackedWidget" name="settingsStackedWidget">
-      <!-- Page 0: Training / Augmentation Settings -->
       <widget class="QWidget" name="trainingSettingsPage">
        <layout class="QVBoxLayout" name="trainingSettingsLayout">
-        <!-- Header -->
         <item>
          <widget class="QLabel" name="headerLabel">
+          <property name="styleSheet">
+           <string notr="true">color: white; font-size: 24px; font-weight: bold;</string>
+          </property>
           <property name="text">
            <string>Augmentation Settings</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
-          <property name="styleSheet">
-           <string notr="true">color: white; font-size: 24px; font-weight: bold;</string>
-          </property>
          </widget>
         </item>
-        <!-- Options: Category and Label -->
         <item>
          <layout class="QHBoxLayout" name="optionsLayout">
           <item>
            <widget class="QLabel" name="labelCategory">
-            <property name="text">
-             <string>Category:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Category:</string>
             </property>
            </widget>
           </item>
@@ -134,11 +379,11 @@
           </item>
           <item>
            <widget class="QLabel" name="labelLabel">
-            <property name="text">
-             <string>Label:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Label:</string>
             </property>
            </widget>
           </item>
@@ -168,25 +413,20 @@
           </item>
          </layout>
         </item>
-        <!-- Training Settings Sliders -->
         <item>
          <layout class="QGridLayout" name="slidersGridLayout">
-          <!-- Row 0: Num Pictures -->
           <item row="0" column="0">
            <widget class="QLabel" name="label_num_pictures">
-            <property name="text">
-             <string>Num Pictures:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Num Pictures:</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QSlider" name="slider_num_pictures">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>1</number>
             </property>
@@ -196,34 +436,33 @@
             <property name="value">
              <number>25</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="value_num_pictures">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>25</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 1: Rotation -->
           <item row="1" column="0">
            <widget class="QLabel" name="label_min_rotation">
-            <property name="text">
-             <string>Min Rotation (deg):</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Rotation (deg):</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
            <widget class="QSlider" name="slider_min_rotation">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>-65</number>
             </property>
@@ -233,33 +472,33 @@
             <property name="value">
              <number>-15</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="1" column="2">
            <widget class="QLabel" name="value_min_rotation">
-            <property name="text">
-             <string>-15</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>-15</string>
             </property>
            </widget>
           </item>
           <item row="1" column="3">
            <widget class="QLabel" name="label_max_rotation">
-            <property name="text">
-             <string>Max Rotation (deg):</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Rotation (deg):</string>
             </property>
            </widget>
           </item>
           <item row="1" column="4">
            <widget class="QSlider" name="slider_max_rotation">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>-65</number>
             </property>
@@ -269,34 +508,33 @@
             <property name="value">
              <number>15</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="1" column="5">
            <widget class="QLabel" name="value_max_rotation">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>15</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 2: Brightness Offset -->
           <item row="2" column="0">
            <widget class="QLabel" name="label_min_beta">
-            <property name="text">
-             <string>Min Brightness Offset:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Brightness Offset:</string>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
            <widget class="QSlider" name="slider_min_beta">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>-100</number>
             </property>
@@ -306,33 +544,33 @@
             <property name="value">
              <number>-20</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="2" column="2">
            <widget class="QLabel" name="value_min_beta">
-            <property name="text">
-             <string>-20</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>-20</string>
             </property>
            </widget>
           </item>
           <item row="2" column="3">
            <widget class="QLabel" name="label_max_beta">
-            <property name="text">
-             <string>Max Brightness Offset:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Brightness Offset:</string>
             </property>
            </widget>
           </item>
           <item row="2" column="4">
            <widget class="QSlider" name="slider_max_beta">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>-100</number>
             </property>
@@ -342,34 +580,33 @@
             <property name="value">
              <number>20</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="2" column="5">
            <widget class="QLabel" name="value_max_beta">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>20</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 3: Alpha -->
           <item row="3" column="0">
            <widget class="QLabel" name="label_min_alpha">
-            <property name="text">
-             <string>Min Alpha:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Alpha:</string>
             </property>
            </widget>
           </item>
           <item row="3" column="1">
            <widget class="QSlider" name="slider_min_alpha">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>1</number>
             </property>
@@ -378,153 +615,151 @@
             </property>
             <property name="value">
              <number>10</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="3" column="2">
            <widget class="QLabel" name="value_min_alpha">
-            <property name="text">
-             <string>10</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>10</string>
             </property>
            </widget>
           </item>
           <item row="3" column="3">
            <widget class="QLabel" name="label_max_alpha">
-            <property name="text">
-             <string>Max Alpha:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Alpha:</string>
             </property>
            </widget>
           </item>
           <item row="3" column="4">
            <widget class="QSlider" name="slider_max_alpha">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>1</number>
             </property>
             <property name="maximum">
              <number>30</number>
             </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
             <property name="value">
              <number>10</number>
             </property>
-            <property name="singleStep">
-             <number>1</number>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="3" column="5">
            <widget class="QLabel" name="value_max_alpha">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>10</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 4: Zoom Factor -->
           <item row="4" column="0">
            <widget class="QLabel" name="label_min_zoom">
-            <property name="text">
-             <string>Min Zoom Factor:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Zoom Factor:</string>
             </property>
            </widget>
           </item>
           <item row="4" column="1">
            <widget class="QSlider" name="slider_min_zoom">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
             <property name="maximum">
              <number>30</number>
             </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
             <property name="value">
              <number>10</number>
             </property>
-            <property name="singleStep">
-             <number>1</number>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="4" column="2">
            <widget class="QLabel" name="value_min_zoom">
-            <property name="text">
-             <string>10</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>10</string>
             </property>
            </widget>
           </item>
           <item row="4" column="3">
            <widget class="QLabel" name="label_max_zoom">
-            <property name="text">
-             <string>Max Zoom Factor:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Zoom Factor:</string>
             </property>
            </widget>
           </item>
           <item row="4" column="4">
            <widget class="QSlider" name="slider_max_zoom">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
             <property name="maximum">
              <number>30</number>
             </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
             <property name="value">
              <number>10</number>
             </property>
-            <property name="singleStep">
-             <number>1</number>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="4" column="5">
            <widget class="QLabel" name="value_max_zoom">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>10</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 5: Frame Rate -->
           <item row="5" column="0">
            <widget class="QLabel" name="label_frame_rate">
-            <property name="text">
-             <string>Frame Rate (ms):</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Frame Rate (ms):</string>
             </property>
            </widget>
           </item>
           <item row="5" column="1">
            <widget class="QSlider" name="slider_frame_rate">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>5</number>
             </property>
@@ -534,34 +769,33 @@
             <property name="value">
              <number>500</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="5" column="2">
            <widget class="QLabel" name="value_frame_rate">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>500</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 6: Hue Shift -->
           <item row="6" column="0">
            <widget class="QLabel" name="label_min_hue">
-            <property name="text">
-             <string>Min Hue Shift:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Hue Shift:</string>
             </property>
            </widget>
           </item>
           <item row="6" column="1">
            <widget class="QSlider" name="slider_min_hue">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>-10</number>
             </property>
@@ -571,33 +805,33 @@
             <property name="value">
              <number>-5</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="6" column="2">
            <widget class="QLabel" name="value_min_hue">
-            <property name="text">
-             <string>-5</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>-5</string>
             </property>
            </widget>
           </item>
           <item row="6" column="3">
            <widget class="QLabel" name="label_max_hue">
-            <property name="text">
-             <string>Max Hue Shift:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Hue Shift:</string>
             </property>
            </widget>
           </item>
           <item row="6" column="4">
            <widget class="QSlider" name="slider_max_hue">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>-10</number>
             </property>
@@ -607,34 +841,33 @@
             <property name="value">
              <number>5</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="6" column="5">
            <widget class="QLabel" name="value_max_hue">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>5</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 7: Saturation Scale -->
           <item row="7" column="0">
            <widget class="QLabel" name="label_min_saturation">
-            <property name="text">
-             <string>Min Saturation Scale:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Saturation Scale:</string>
             </property>
            </widget>
           </item>
           <item row="7" column="1">
            <widget class="QSlider" name="slider_min_saturation">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>50</number>
             </property>
@@ -644,33 +877,33 @@
             <property name="value">
              <number>90</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="7" column="2">
            <widget class="QLabel" name="value_min_saturation">
-            <property name="text">
-             <string>90</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>90</string>
             </property>
            </widget>
           </item>
           <item row="7" column="3">
            <widget class="QLabel" name="label_max_saturation">
-            <property name="text">
-             <string>Max Saturation Scale:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Saturation Scale:</string>
             </property>
            </widget>
           </item>
           <item row="7" column="4">
            <widget class="QSlider" name="slider_max_saturation">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>50</number>
             </property>
@@ -680,34 +913,33 @@
             <property name="value">
              <number>110</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="7" column="5">
            <widget class="QLabel" name="value_max_saturation">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>110</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 8: Translate Fraction -->
           <item row="8" column="0">
            <widget class="QLabel" name="label_min_translate">
-            <property name="text">
-             <string>Min Translate Fraction:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Translate Fraction:</string>
             </property>
            </widget>
           </item>
           <item row="8" column="1">
            <widget class="QSlider" name="slider_min_translate">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -717,33 +949,33 @@
             <property name="value">
              <number>0</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="8" column="2">
            <widget class="QLabel" name="value_min_translate">
-            <property name="text">
-             <string>0</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>0</string>
             </property>
            </widget>
           </item>
           <item row="8" column="3">
            <widget class="QLabel" name="label_max_translate">
-            <property name="text">
-             <string>Max Translate Fraction:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Translate Fraction:</string>
             </property>
            </widget>
           </item>
           <item row="8" column="4">
            <widget class="QSlider" name="slider_max_translate">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -753,34 +985,33 @@
             <property name="value">
              <number>10</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="8" column="5">
            <widget class="QLabel" name="value_max_translate">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>10</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 9: Shear -->
           <item row="9" column="0">
            <widget class="QLabel" name="label_min_shear">
-            <property name="text">
-             <string>Min Shear (deg):</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Shear (deg):</string>
             </property>
            </widget>
           </item>
           <item row="9" column="1">
            <widget class="QSlider" name="slider_min_shear">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -790,33 +1021,33 @@
             <property name="value">
              <number>0</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="9" column="2">
            <widget class="QLabel" name="value_min_shear">
-            <property name="text">
-             <string>0</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>0</string>
             </property>
            </widget>
           </item>
           <item row="9" column="3">
            <widget class="QLabel" name="label_max_shear">
-            <property name="text">
-             <string>Max Shear (deg):</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Max Shear (deg):</string>
             </property>
            </widget>
           </item>
           <item row="9" column="4">
            <widget class="QSlider" name="slider_max_shear">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -826,34 +1057,33 @@
             <property name="value">
              <number>50</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="9" column="5">
            <widget class="QLabel" name="value_max_shear">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>50</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 10: Flip LR Probability -->
           <item row="10" column="0">
            <widget class="QLabel" name="label_flip_lr">
-            <property name="text">
-             <string>Flip LR Prob:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Flip LR Prob:</string>
             </property>
            </widget>
           </item>
           <item row="10" column="1">
            <widget class="QSlider" name="slider_flip_lr">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -863,21 +1093,23 @@
             <property name="value">
              <number>50</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="10" column="2">
            <widget class="QLabel" name="value_flip_lr">
-            <property name="text">
-             <string>50</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>50</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
-        <!-- Button Row for Training Settings -->
         <item>
          <layout class="QHBoxLayout" name="buttonLayout_training">
           <item>
@@ -889,11 +1121,11 @@
           </item>
           <item>
            <widget class="QLabel" name="statusLabel">
-            <property name="text">
-             <string>Status: Waiting</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Status: Waiting</string>
             </property>
            </widget>
           </item>
@@ -901,42 +1133,35 @@
         </item>
        </layout>
       </widget>
-      <!-- Page 1: Labeling Settings -->
       <widget class="QWidget" name="labelingPage">
        <layout class="QVBoxLayout" name="labelingSettingsLayout">
-        <!-- Labeling Header -->
         <item>
          <widget class="QLabel" name="labelingHeaderLabel">
+          <property name="styleSheet">
+           <string notr="true">color: white; font-size: 24px; font-weight: bold;</string>
+          </property>
           <property name="text">
            <string>Image Labeling Settings</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
-          <property name="styleSheet">
-           <string notr="true">color: white; font-size: 24px; font-weight: bold;</string>
-          </property>
          </widget>
         </item>
-        <!-- Labeling Settings Sliders -->
         <item>
          <layout class="QGridLayout" name="labelingSlidersGridLayout">
-          <!-- Row 0: Canny Threshold1 -->
           <item row="0" column="0">
            <widget class="QLabel" name="label_canny_th1">
-            <property name="text">
-             <string>Canny Threshold1:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Canny Threshold1:</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QSlider" name="slider_canny_th1">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -946,34 +1171,33 @@
             <property name="value">
              <number>475</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="value_canny_th1">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>475</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 1: Canny Threshold2 -->
           <item row="1" column="0">
            <widget class="QLabel" name="label_canny_th2">
-            <property name="text">
-             <string>Canny Threshold2:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Canny Threshold2:</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
            <widget class="QSlider" name="slider_canny_th2">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -983,74 +1207,72 @@
             <property name="value">
              <number>400</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="1" column="2">
            <widget class="QLabel" name="value_canny_th2">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>400</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 2: YOLO Padding Factor -->
           <item row="2" column="0">
            <widget class="QLabel" name="label_padding_factor">
-            <property name="text">
-             <string>YOLO Padding Factor (%):</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>YOLO Padding Factor (%):</string>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
            <widget class="QSlider" name="slider_padding_factor">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
             <property name="maximum">
              <number>50</number>
             </property>
+            <property name="singleStep">
+             <number>1</number>
+            </property>
             <property name="value">
              <number>10</number>
             </property>
-            <property name="singleStep">
-             <number>1</number>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
            </widget>
           </item>
           <item row="2" column="2">
            <widget class="QLabel" name="value_padding_factor">
+            <property name="styleSheet">
+             <string notr="true">color: white;</string>
+            </property>
             <property name="text">
              <string>0.10</string>
             </property>
-            <property name="styleSheet">
-             <string notr="true">color: white;</string>
-            </property>
            </widget>
           </item>
-          <!-- Row 3: Min Bounding Box Area -->
           <item row="3" column="0">
            <widget class="QLabel" name="label_min_bbox_area">
-            <property name="text">
-             <string>Min Bounding Box Area:</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Min Bounding Box Area:</string>
             </property>
            </widget>
           </item>
           <item row="3" column="1">
            <widget class="QSlider" name="slider_min_bbox_area">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -1060,21 +1282,23 @@
             <property name="value">
              <number>1000</number>
             </property>
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
            </widget>
           </item>
           <item row="3" column="2">
            <widget class="QLabel" name="value_min_bbox_area">
-            <property name="text">
-             <string>1000</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>1000</string>
             </property>
            </widget>
           </item>
          </layout>
         </item>
-        <!-- Labeling Page Button Row -->
         <item>
          <layout class="QHBoxLayout" name="buttonLayout_labeling">
           <item>
@@ -1086,11 +1310,11 @@
           </item>
           <item>
            <widget class="QLabel" name="labelingStatusLabel">
-            <property name="text">
-             <string>Status: Waiting</string>
-            </property>
             <property name="styleSheet">
              <string notr="true">color: white;</string>
+            </property>
+            <property name="text">
+             <string>Status: Waiting</string>
             </property>
            </widget>
           </item>
@@ -1098,10 +1322,8 @@
         </item>
        </layout>
       </widget>
-      <!-- Page 2: Hardware Control Settings -->
       <widget class="QWidget" name="hardwareControlPage">
        <layout class="QVBoxLayout" name="hardwareLayout">
-        <!-- Serial Connection Group -->
         <item>
          <widget class="QGroupBox" name="groupSerial">
           <property name="title">
@@ -1116,9 +1338,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="comboSerialPort">
-             <!-- Populate via code -->
-            </widget>
+            <widget class="QComboBox" name="comboSerialPort"/>
            </item>
            <item>
             <widget class="QPushButton" name="btnTestConnection">
@@ -1130,7 +1350,6 @@
           </layout>
          </widget>
         </item>
-        <!-- Board Settings Display Group -->
         <item>
          <widget class="QGroupBox" name="groupBoardSettings">
           <property name="title">
@@ -1143,14 +1362,12 @@
           </layout>
          </widget>
         </item>
-        <!-- Axis Movement Controls Group -->
         <item>
          <widget class="QGroupBox" name="groupAxisControls">
           <property name="title">
            <string>Axis Movement Controls</string>
           </property>
           <layout class="QGridLayout" name="layoutAxisControls">
-           <!-- Axis X -->
            <item row="0" column="0">
             <widget class="QLabel" name="labelAxisX">
              <property name="text">
@@ -1193,7 +1410,6 @@
              </property>
             </widget>
            </item>
-           <!-- Axis Y -->
            <item row="1" column="0">
             <widget class="QLabel" name="labelAxisY">
              <property name="text">
@@ -1236,7 +1452,6 @@
              </property>
             </widget>
            </item>
-           <!-- Axis Z -->
            <item row="2" column="0">
             <widget class="QLabel" name="labelAxisZ">
              <property name="text">
@@ -1282,7 +1497,6 @@
           </layout>
          </widget>
         </item>
-        <!-- Endstop Signals Group -->
         <item>
          <widget class="QGroupBox" name="groupEndstops">
           <property name="title">
@@ -1305,7 +1519,6 @@
           </layout>
          </widget>
         </item>
-        <!-- Common G/M Commands Group -->
         <item>
          <widget class="QGroupBox" name="groupCommonCommands">
           <property name="title">
@@ -1350,7 +1563,6 @@
           </layout>
          </widget>
         </item>
-        <!-- Custom Command Group -->
         <item>
          <widget class="QGroupBox" name="groupCustomCommand">
           <property name="title">
@@ -1377,7 +1589,6 @@
           </layout>
          </widget>
         </item>
-        <!-- Log Output Group -->
         <item>
          <widget class="QGroupBox" name="groupLog">
           <property name="title">
@@ -1396,20 +1607,21 @@
     </item>
    </layout>
   </widget>
-  <!-- Permanent Photo Preview Gallery Dock (Right Side) -->
   <widget class="QDockWidget" name="galleryDock">
-   <property name="windowTitle">
-    <string>Photo Preview Gallery</string>
-   </property>
    <property name="minimumSize">
     <size>
      <width>300</width>
-     <height>100</height>
+     <height>145</height>
     </size>
    </property>
+   <property name="windowTitle">
+    <string>Photo Preview Gallery</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
    <widget class="QWidget" name="dockContainer">
     <layout class="QVBoxLayout" name="dockLayout">
-     <!-- Gallery Settings -->
      <item>
       <layout class="QHBoxLayout" name="gallerySettingsLayout">
        <item>
@@ -1421,13 +1633,20 @@
        </item>
       </layout>
      </item>
-     <!-- Scroll Area for Gallery Previews -->
      <item>
       <widget class="QScrollArea" name="scrollGallery">
        <property name="widgetResizable">
         <bool>true</bool>
        </property>
        <widget class="QWidget" name="galleryContent">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>280</width>
+          <height>1043</height>
+         </rect>
+        </property>
         <layout class="QGridLayout" name="galleryGridLayout"/>
        </widget>
       </widget>
@@ -1435,7 +1654,6 @@
     </layout>
    </widget>
   </widget>
-  <!-- Tool Bar -->
   <widget class="QToolBar" name="mainToolBar">
    <property name="windowTitle">
     <string>Tool Bar</string>
@@ -1452,14 +1670,13 @@
    <action name="actionLabel_Images"/>
    <action name="actionTest_Images"/>
   </widget>
-  <!-- Menu Bar -->
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
-     <height>24</height>
+     <width>1349</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuVideo_Input_2">
@@ -1501,9 +1718,7 @@
    <addaction name="menuFunctions_2"/>
    <addaction name="menuMaintenance"/>
   </widget>
-  <!-- Status Bar -->
   <widget class="QStatusBar" name="statusbar"/>
-  <!-- Actions -->
   <action name="actionRaw_Frame">
    <property name="text">
     <string>Raw Frame</string>

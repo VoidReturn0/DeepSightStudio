@@ -79,7 +79,7 @@ class ConfigManager:
             }
         self.defaults = defaults
         self.settings = self.load_settings()
-        self.save_settings()  # Persist merged defaults (creates file if missing)
+        #self.save_settings()  # Persist merged defaults (creates file if missing)
 
         if WATCHDOG_AVAILABLE:
             self._observer = Observer()
